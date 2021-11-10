@@ -33,7 +33,7 @@ $.fn.serializeObject = function() {
     var Instance = Slideshow.instance = undefined;
     var Settings = Slideshow.settings = {
         selector: ".slideshow",
-        timeout: 5000, // default timeout
+        timeout: 10000, // default timeout
         autoplay:true,
         max: -1,
         tick:250
