@@ -108,15 +108,15 @@
 .slideshow.fast-backward.active .slideshow-progress:not(.prevent):before,
 .slideshow.backward.active .slideshow-progress:not(.prevent):before
 {
-    -webkit-animation: slideshowProgressCancel 2s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
-    animation: slideshowProgressCancel 2s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
+    -webkit-animation: slideshowProgressCancel 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
+    animation: slideshowProgressCancel 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
 }
 
 .slideshow.fast-forward.active .slideshow-progress:not(.prevent):before,
 .slideshow.forward.active .slideshow-progress:not(.prevent):before 
 {
-    -webkit-animation: slideshowProgressComplete 2s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
-    animation: slideshowProgressComplete 2s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
+    -webkit-animation: slideshowProgressComplete 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
+    animation: slideshowProgressComplete 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
 }
 
 @keyframes slideshowProgress {

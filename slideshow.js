@@ -32,38 +32,38 @@ $.fn.serializeObject = function() {
     var Dict = Slideshow.dict = {};
     var Instance = Slideshow.instance = undefined;
     var Settings = Slideshow.settings = {
-        selector: ".slideshow",
-        timeout: 5000, // default timeout
-        autoplay:true,
-        max: -1,
-        tick:250,
-        keyControl:undefined,
-        clickControl:undefined
+        selector    : ".slideshow",
+        timeout     : 5000, // default timeout
+        autoplay    : true,
+        max         : -1,
+        tick        : 250,
+        keyControl  : undefined,
+        clickControl: undefined
     };
 
     const State = Slideshow.state = {
-        PLAY: "play",
-        SHOW: "show",
-        PREVENT: "prevent",
-        ACTIVE: "active",   // Overhead time until animation ends
-        TIMEOUT: "timeout", // Force slideshow time reset (when clicking on backward or forward button)
+        PLAY         : "play",
+        SHOW         : "show",
+        PREVENT      : "prevent",
+        ACTIVE       : "active",   // Overhead time until animation ends
+        TIMEOUT      : "timeout", // Force slideshow time reset (when clicking on backward or forward button)
 
-        REWIND: "rewind",   // Reset to initial slide and keep current state (pause or play)
-        FASTBACKWARD: "fast-backward",
-        BACKWARD: "backward",
-        FORWARD: "forward",
-        FASTFORWARD: "fast-forward",
+        REWIND       : "rewind",   // Reset to initial slide and keep current state (pause or play)
+        FASTBACKWARD : "fast-backward",
+        BACKWARD     : "backward",
+        FORWARD      : "forward",
+        FASTFORWARD  : "fast-forward",
     };
 
     const Key = Slideshow.key = {
 
-        LEFT:37,
-        UP:38,
-        RIGHT:39,
-        DOWN:40,
+        LEFT : 37,
+        UP   : 38,
+        RIGHT: 39,
+        DOWN : 40,
     }
 
-    var debug = true;
+    var debug = false;
     var ready = false;
 
     var parseDuration = function(str) { return 1000*parseFloat(str); }
@@ -342,7 +342,7 @@ $.fn.serializeObject = function() {
 
             if(Slideshow.asleep() && Slideshow.instance != undefined) {
 
-                if(debug) console.log("[MASTER]","Fullstop");
+                if(debug > 1) console.log("[MASTER]","Fullstop");
                 clearInterval(Slideshow.instance);
                 Slideshow.instance = undefined;
             }
@@ -440,7 +440,7 @@ $.fn.serializeObject = function() {
                 });
 
                 if(timeout > 0) {
-                    if(debug) console.log("[SLAVE] ","New timing \""+timeout+"\" found in progress bar animation for ", this.id);
+                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"\" found in progress bar animation for ", this.id);
                     Slideshow.dict[this.id].timeout = timeout;
                 }
             }
@@ -624,7 +624,7 @@ $.fn.serializeObject = function() {
                 delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
                 duration = Math.max(duration, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             }
-            
+
             var fallbackStart = true, fallbackEnd = true;
             var fallbackCallback = function() { 
 
@@ -685,6 +685,7 @@ $.fn.serializeObject = function() {
     Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
 
+    Slideshow.togglePlay   = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).toggleClass(Slideshow.state.PLAY); }); }
     Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY); }); }
     Slideshow.rewind       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.REWIND       + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastBackward = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTBACKWARD + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
