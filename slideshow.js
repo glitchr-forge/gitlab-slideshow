@@ -525,6 +525,7 @@ $.fn.serializeObject = function() {
             // Update entry 
             //
             var entry = entries[position];
+            dispatchEvent(new Event('slideshow:update'));
             
             $(entry).addClass(Slideshow.state.SHOW);
             $(entries).each(function() {
@@ -628,6 +629,7 @@ $.fn.serializeObject = function() {
             var fallbackStart = true, fallbackEnd = true;
             var fallbackCallback = function() { 
 
+                dispatchEvent(new Event('slideshow:active'));
                 if(!$(this).hasClass(Slideshow.state.ACTIVE) && fallbackStart)
                     $(entry).trigger('animationstart.slideshow');
 
