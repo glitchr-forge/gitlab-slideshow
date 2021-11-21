@@ -45,6 +45,7 @@ $.fn.serializeObject = function() {
         PLAY         : "play",
         SHOW         : "show",
         PREVENT      : "prevent",
+        EMPTY        : "empty",
         ACTIVE       : "active",   // Overhead time until animation ends
         TIMEOUT      : "timeout", // Force slideshow time reset (when clicking on backward or forward button)
 
@@ -157,7 +158,11 @@ $.fn.serializeObject = function() {
                 first:undefined, last:undefined, 
                 progress:0, timeout: undefined, isHover:false};
 
+            var entries = $(this).find("slideshow-entry");
+            if(entries.length < 1) $(this).addClass(Slideshow.state.EMPTY);
+
             Slideshow.run(function() {
+
                 if (Slideshow.get("autoplay"))
                     Slideshow.play(this);
 
@@ -591,7 +596,15 @@ $.fn.serializeObject = function() {
                 }.bind(this));
 
             var position = this.dataset.position || 0;
+
             var entry = entries[position];
+            if (entry === undefined) {
+
+                $(this).addClass(Slideshow.state.EMPTY);
+                return this;
+            }
+
+            $(this).removeClass(Slideshow.state.EMPTY);
             
             //
             // Add active flag and wait for transitions to finish 
