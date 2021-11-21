@@ -160,6 +160,7 @@ $.fn.serializeObject = function() {
 
             var entries = $(this).find("slideshow-entry");
             if(entries.length < 1) $(this).addClass(Slideshow.state.EMPTY);
+            else $(this).addClass(Slideshow.state.REMOVE);
 
             Slideshow.run(function() {
 
@@ -287,15 +288,6 @@ $.fn.serializeObject = function() {
             Object.keys(Slideshow.dict).forEach(function(id) { 
 
                 var that = Slideshow.dict[id];
-
-                // if(!$(that.container).hasClass(Slideshow.state.ACTIVE)) {
-
-                //     $(that.container).removeClass(Slideshow.state.REWIND);
-                //     $(that.container).removeClass(Slideshow.state.FASTBACKWARD);
-                //     $(that.container).removeClass(Slideshow.state.BACKWARD);
-                //     $(that.container).removeClass(Slideshow.state.FORWARD);
-                //     $(that.container).removeClass(Slideshow.state.FASTFORWARD);
-                // }
 
                 if(debug > 1) console.log("[SLAVE] ","State",that.container.classList);
                 if($(that.container).hasClass(Slideshow.state.ACTIVE) || $(that.container).hasClass(Slideshow.state.TIMEOUT)) {
@@ -524,8 +516,8 @@ $.fn.serializeObject = function() {
             $(this).removeClass(Slideshow.state.FASTFORWARD);
 
             var lastPosition = Slideshow.dict[this.id].last;
-            if (position < 0 || position > lastPosition) position = Slideshow.modulo(position, lastPosition+1);
-
+            position = Slideshow.modulo(position, lastPosition+1);
+            
             //
             // Update entry 
             //
@@ -580,7 +572,6 @@ $.fn.serializeObject = function() {
                     // Entry number
                     //
                     entry.dataset.num = index;
-
                     //
                     // OPTIONAL: Prevent progress bar to start
                     //
@@ -596,7 +587,6 @@ $.fn.serializeObject = function() {
                 }.bind(this));
 
             var position = this.dataset.position || 0;
-
             var entry = entries[position];
             if (entry === undefined) {
 
@@ -626,7 +616,7 @@ $.fn.serializeObject = function() {
             // Additional transitioning blocks (both .slideshow-entry block or .slideshow-transition blocks)
             //
             var transition = $(this).find(".slideshow-transition")[0];
-            if(transition) {
+            if (transition) {
 
                 var entryStyle = window.getComputedStyle(transition);
                 delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
@@ -658,37 +648,48 @@ $.fn.serializeObject = function() {
 
             $(entry).off('animationstart.slideshow transitionstart.slideshow');
             $(entry).on ('animationstart.slideshow transitionstart.slideshow', function() { 
+                
                 fallbackStart = false;
                 fallbackCallback();
                 $(this).addClass(Slideshow.state.ACTIVE); 
                 $(entry).addClass(Slideshow.state.ACTIVE);
+
             }.bind(this));
             $(entry).off('animationend.slideshow transitionend.slideshow');
             $(entry).on ('animationend.slideshow transitionend.slideshow', function() {
+
                 fallbackEnd = false;
                 $(this).removeClass(Slideshow.state.ACTIVE); 
                 $(entry).removeClass(Slideshow.state.ACTIVE);
+
+                //
+                // Update position
+                //
                 Slideshow.updatePosition(this);
+                position = this.dataset.position || 0;
+
+                //
+                // OPTIONAL: Update pagers
+                //
+                $(this).find(".slideshow-pager").each(function() { 
+                    
+                    $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
+                    $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
+
+                    $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
+                    $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
+                });
+
             }.bind(this));
+
             $(entry).off('animationcancel.slideshow transitioncancel.slideshow');
             $(entry).on ('animationcancel.slideshow transitioncancel.slideshow', function() { 
+
                 $(this).removeClass(Slideshow.state.ACTIVE); 
                 $(entry).removeClass(Slideshow.state.ACTIVE); 
             }.bind(this));
 
             setTimeout(fallbackCallback, delay);
-
-            //
-            // OPTIONAL: Update pagers
-            //
-            $(this).find(".slideshow-pager").each(function() { 
-                $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
-                $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
-
-                $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
-                $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
-            });
-
             return this;
         });
     }
