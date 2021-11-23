@@ -33,10 +33,10 @@ $.fn.serializeObject = function() {
     var Instance = Slideshow.instance = undefined;
     var Settings = Slideshow.settings = {
         selector    : ".slideshow",
-        timeout     : 5000, // default timeout
+        timeout     : "5000ms", // default timeout
         autoplay    : true,
         max         : -1,
-        tick        : 250,
+        tick        : "250ms",
         keyControl  : undefined,
         clickControl: undefined
     };
@@ -67,7 +67,11 @@ $.fn.serializeObject = function() {
     var debug = false;
     var ready = false;
 
-    var parseDuration = function(str) { return 1000*parseFloat(str); }
+    var parseDuration = function(str) { 
+
+        if(String(str).endsWith("ms")) return parseFloat(String(str))/1000;
+        return parseFloat(String(str));
+    }
 
     Slideshow.get = function(key) {
     
@@ -315,7 +319,7 @@ $.fn.serializeObject = function() {
                                 if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
                                 Slideshow.forward(that.container);
                                 Slideshow.update(that.container); 
-                            }.bind(that), that.timeout || Slideshow.get("timeout")
+                            }.bind(that), that.timeout || 1000*parseDuration(Slideshow.get("timeout"))
                         );
 
                     } else if ($(that.container).hasClass(Slideshow.state.TIMEOUT)) {
@@ -344,7 +348,7 @@ $.fn.serializeObject = function() {
                 Slideshow.instance = undefined;
             }
 
-        }, Slideshow.get("tick"));
+        }, 1000*parseDuration(Slideshow.get("tick")));
     }
 
     Slideshow.handleNavigation = function(selector = Slideshow.get("selector"))
@@ -430,7 +434,7 @@ $.fn.serializeObject = function() {
                 $(this).find(".slideshow-progress").each(function() {
 
                     var style = window.getComputedStyle(this, ":before");
-                    var _timeout = Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
+                    var _timeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
                     if (!timeout) timeout = _timeout;
                     else if (_timeout != timeout && timeout > 0 && _timeout > 0)
                         console.error("Ambiguous timing \""+_timeout+"\" compared to current timing \""+timeout+"\" found in progress bar animation (or transformation)", style);
@@ -456,8 +460,8 @@ $.fn.serializeObject = function() {
             var nImages = $(this).find(".slideshow-image").length;
             if (nImages > 1) {
 
-                var tick = Slideshow.get("tick");
-                var timeout = Slideshow.dict[this.id].timeout || Slideshow.get("timeout");
+                var tick = 1000*parseDuration(Slideshow.get("tick"));
+                var timeout = Slideshow.dict[this.id].timeout || 1000*parseDuration(Slideshow.get("timeout"));
                 var dP = tick/timeout;
 
                 Slideshow.dict[this.id].progress += dP;
@@ -603,14 +607,14 @@ $.fn.serializeObject = function() {
             var delay = 0, duration = 0;
 
             var entryStyle = window.getComputedStyle(entry);
-            delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             var entryStyle = window.getComputedStyle(entry, ":before");
-            delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             var entryStyle = window.getComputedStyle(entry, ":after");
-            delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
 
             //
             // Additional transitioning blocks (both .slideshow-entry block or .slideshow-transition blocks)
@@ -619,14 +623,14 @@ $.fn.serializeObject = function() {
             if (transition) {
 
                 var entryStyle = window.getComputedStyle(transition);
-                delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
                 var entryStyle = window.getComputedStyle($(this).find(".slideshow-transition")[0], ":before");
-                delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
                 var entryStyle = window.getComputedStyle($(this).find(".slideshow-transition")[0], ":after");
-                delay    = Math.max(delay, Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
+                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             }
 
             var fallbackStart = true, fallbackEnd = true;
@@ -636,7 +640,7 @@ $.fn.serializeObject = function() {
                 if(!$(this).hasClass(Slideshow.state.ACTIVE) && fallbackStart)
                     $(entry).trigger('animationstart.slideshow');
 
-                if(duration == 0) duration = Slideshow.get("tick"); // dT
+                if(duration == 0) duration = 1000*parseDuration(Slideshow.get("tick")); // dT
                 setTimeout( function() { 
 
                     if ($(this).hasClass(Slideshow.state.ACTIVE) && fallbackEnd)
