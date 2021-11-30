@@ -655,16 +655,18 @@ $.fn.serializeObject = function() {
                 
                 fallbackStart = false;
                 fallbackCallback();
-                $(this).addClass(Slideshow.state.ACTIVE); 
-                $(entry).addClass(Slideshow.state.ACTIVE);
+
+                // $(this).addClass(Slideshow.state.ACTIVE); 
+                // $(entry).addClass(Slideshow.state.ACTIVE);
 
             }.bind(this));
+
             $(entry).off('animationend.slideshow transitionend.slideshow');
             $(entry).on ('animationend.slideshow transitionend.slideshow', function() {
 
                 fallbackEnd = false;
                 $(this).removeClass(Slideshow.state.ACTIVE); 
-                $(entry).removeClass(Slideshow.state.ACTIVE);
+                $(entry).removeClass(Slideshow.state.ACTIVE);    
 
                 //
                 // Update position
@@ -688,7 +690,6 @@ $.fn.serializeObject = function() {
 
             $(entry).off('animationcancel.slideshow transitioncancel.slideshow');
             $(entry).on ('animationcancel.slideshow transitioncancel.slideshow', function() { 
-
                 $(this).removeClass(Slideshow.state.ACTIVE); 
                 $(entry).removeClass(Slideshow.state.ACTIVE); 
             }.bind(this));
@@ -701,10 +702,7 @@ $.fn.serializeObject = function() {
     Slideshow.find         = function(selector = Slideshow.get("selector")) { return $(selector).filter(function() { return this.id in Slideshow.dict; }); }
     Slideshow.known        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return this != undefined; }); }
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
-    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { 
-        return $(this).addClass(Slideshow.state.PLAY);
-        Slideshow.run();
-    }); }
+    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.PLAY);  }); }
 
     Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
