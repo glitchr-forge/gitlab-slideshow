@@ -36,7 +36,7 @@ $.fn.serializeObject = function() {
         timeout     : "5000ms", // default timeout
         autoplay    : true,
         max         : -1,
-        tick        : "250ms",
+        tick        : "500ms",
         keyControl  : undefined,
         clickControl: undefined
     };
