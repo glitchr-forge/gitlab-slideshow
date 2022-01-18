@@ -202,7 +202,7 @@ $.fn.serializeObject = function() {
         image = document.createElement("img");
         image.setAttribute("class", "slideshow-image");
         image.setAttribute("src", entry.dataset.image);
-
+        
         var href  = entry.dataset.href || undefined;
         if (href === undefined) entry.prepend(image);
         else {
