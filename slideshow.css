@@ -195,7 +195,7 @@ body:not(.touch) .slideshow-theme-default .slideshow-player > *:active {
 .slideshow-theme-default .slideshow-taglabel
 {
     position:absolute;
-    z-index:9;
+    z-index:10;
     bottom:0;
     left:0;
     padding:0.5em 1em 0 1em;

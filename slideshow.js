@@ -526,7 +526,7 @@ $.fn.serializeObject = function() {
             // Update entry 
             //
             var entry = entries[position];
-            dispatchEvent(new Event('slideshow:update'));
+            dispatchEvent(new CustomEvent('slideshow:update', {'slideshow': this, 'entry': entry}));
             
             $(entry).addClass(Slideshow.state.SHOW);
             $(entries).each(function() {
@@ -636,7 +636,7 @@ $.fn.serializeObject = function() {
             var fallbackStart = true, fallbackEnd = true;
             var fallbackCallback = function() { 
 
-                dispatchEvent(new Event('slideshow:active'));
+                dispatchEvent(new CustomEvent('slideshow:active', {'slideshow': this, 'entry': entry}));
                 if(!$(this).hasClass(Slideshow.state.ACTIVE) && fallbackStart)
                     $(entry).trigger('animationstart.slideshow');
 
@@ -647,7 +647,7 @@ $.fn.serializeObject = function() {
                         $(entry).trigger('animationend.slideshow');
 
                 }.bind(this), duration);
-
+            
             }.bind(this);
 
             $(entry).off('animationstart.slideshow transitionstart.slideshow');
