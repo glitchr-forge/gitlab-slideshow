@@ -264,7 +264,7 @@ $.fn.serializeObject = function() {
         return entry;
     }
     
-    Slideshow.asleep = function() {
+    Slideshow.asleep = function() {
 
         var asleep = true;
         Object.keys(Slideshow.dict).forEach(function(id) {
@@ -294,7 +294,7 @@ $.fn.serializeObject = function() {
                 var that = Slideshow.dict[id];
 
                 if(debug > 1) console.log("[SLAVE] ","State",that.container.classList);
-                if($(that.container).hasClass(Slideshow.state.ACTIVE) || $(that.container).hasClass(Slideshow.state.TIMEOUT)) {
+                if($(that.container).hasClass(Slideshow.state.ACTIVE) || $(that.container).hasClass(Slideshow.state.TIMEOUT)) {
                 
                     $(that.container).removeClass(Slideshow.state.TIMEOUT);
                     if (that.interval !== undefined) {
@@ -430,18 +430,20 @@ $.fn.serializeObject = function() {
             //
             if(Slideshow.dict[this.id].timeout === undefined) {
                 
-                var timeout = 0;
+                var timeout = 1000*parseDuration($(Slideshow.dict[this.id].container).data("timeout")) || 0;
+                if(!timeout) timeout = 1000*parseDuration(Slideshow.get("timeout")) || 0;
+
                 $(this).find(".slideshow-progress").each(function() {
 
                     var style = window.getComputedStyle(this, ":before");
-                    var _timeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
-                    if (!timeout) timeout = _timeout;
-                    else if (_timeout != timeout && timeout > 0 && _timeout > 0)
-                        console.error("Ambiguous timing \""+_timeout+"\" compared to current timing \""+timeout+"\" found in progress bar animation (or transformation)", style);
+                    timeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
+                    if(debug > 1)
+                        console.error("Ambiguous timing \""+_timeout+"\" compared to current timing \""+timeout+"\" found in progress bar animation (or transformation): progress bar animation will be used", style);
                 });
 
                 if(timeout > 0) {
-                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"\" found in progress bar animation for ", this.id);
+
+                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"ms\" found in progress bar animation for ", this.id);
                     Slideshow.dict[this.id].timeout = timeout;
                 }
             }
