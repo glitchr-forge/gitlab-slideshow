@@ -473,14 +473,15 @@ $.fn.serializeObject = function() {
 
             //
             // Optional: update progress bar progress information
+            // (Commented because timeconsuming)
             //
-            var percentage = Slideshow.dict[this.id].progress;
-            $(progress).each(function() {
+            // var percentage = Slideshow.dict[this.id].progress;
+            // $(progress).each(function() {
                 
-                // If progress bar comes from DOMParser().. this.dataset is undefined..
-                if(this.dataset !== undefined) this.dataset.percentage = percentage;
-                else $(this).data("percentage", percentage);
-            });
+            //     // If progress bar comes from DOMParser().. this.dataset is undefined..
+            //     if(this.dataset !== undefined) this.dataset.percentage = percentage;
+            //     else $(this).data("percentage", percentage);
+            // });
         });
     }
 
@@ -529,7 +530,7 @@ $.fn.serializeObject = function() {
             //
             var entry = entries[position];
             dispatchEvent(new CustomEvent('slideshow:update', {'slideshow': this, 'entry': entry}));
-            
+
             $(entry).addClass(Slideshow.state.SHOW);
             $(entries).each(function() {
                 return (this != entry ? $(this).removeClass(Slideshow.state.SHOW) : this);
@@ -645,7 +646,7 @@ $.fn.serializeObject = function() {
                 if(duration == 0) duration = 1000*parseDuration(Slideshow.get("tick")); // dT
                 setTimeout( function() { 
 
-                    if ($(this).hasClass(Slideshow.state.ACTIVE) && fallbackEnd)
+                   if ($(this).hasClass(Slideshow.state.ACTIVE) && fallbackEnd)
                         $(entry).trigger('animationend.slideshow');
 
                 }.bind(this), duration);
@@ -657,9 +658,6 @@ $.fn.serializeObject = function() {
                 
                 fallbackStart = false;
                 fallbackCallback();
-
-                // $(this).addClass(Slideshow.state.ACTIVE); 
-                // $(entry).addClass(Slideshow.state.ACTIVE);
 
             }.bind(this));
 
