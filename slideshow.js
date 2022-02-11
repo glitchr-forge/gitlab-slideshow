@@ -145,8 +145,11 @@ $.fn.serializeObject = function() {
         dispatchEvent(new Event('slideshow:ready'));
 
         Slideshow.run(function() {
-            if (Slideshow.get("autoplay"))
-                Slideshow.play();
+            if (Slideshow.get("autoplay")) {
+                $(Slideshow.get("selector")).each(function() { 
+                    if($(this).hasClass("active") || $(this).hasClass("play")) Slideshow.play(this);
+                });
+            }
         });
 
         return this;
