@@ -8,11 +8,8 @@
     overflow: hidden;
 }
 
-.slideshow  .slideshow-entry.show
-{
-    z-index:1;
-}
-.slideshow  .slideshow-entry
+.slideshow .slideshow-entry:not(.show) > * { display:none; }
+.slideshow .slideshow-entry
 {
     position:absolute;
     height:100%;
@@ -47,7 +44,6 @@
     position: relative;
     width:100%;
     height:100%;
-    overflow:hidden;
 }
 
 .slideshow-image

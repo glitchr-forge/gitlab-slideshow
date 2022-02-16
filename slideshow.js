@@ -38,7 +38,9 @@ $.fn.serializeObject = function() {
         max         : -1,
         tick        : "500ms",
         keyControl  : undefined,
-        clickControl: undefined
+        clickControl: undefined,
+        focus       : true,
+        autocomplete: undefined
     };
 
     const State = Slideshow.state = {
@@ -289,14 +291,29 @@ $.fn.serializeObject = function() {
         if (Slideshow.instance !== undefined) return;
         if(debug > 1) console.log("[MASTER]","New call");
 
+        var focus = Slideshow.get("focus");
+        var focusList = [];
         Slideshow.instance = setInterval(function() {
 
             if(debug > 1) console.log("[MASTER]","Next iteration");
             Object.keys(Slideshow.dict).forEach(function(id) { 
 
                 var that = Slideshow.dict[id];
+                if(Slideshow.get("focus") != focus) {
+                    
+                    if(Slideshow.get("focus") == false) {
+                    
+                        focusList.push(that.container.classList);
+                        Slideshow.pause(that);
 
-                if(debug > 1) console.log("[SLAVE] ","State",that.container.classList);
+                    } else {
+
+                        while(( selector = focusList.pop() ))
+                            Slideshow.play(selector);
+                    }
+                }
+
+                if(debug > 1) console.log("[SLAVE] ","State", that.container.classList);
                 if($(that.container).hasClass(Slideshow.state.ACTIVE) || $(that.container).hasClass(Slideshow.state.TIMEOUT)) {
                 
                     $(that.container).removeClass(Slideshow.state.TIMEOUT);
@@ -582,6 +599,7 @@ $.fn.serializeObject = function() {
                     // Entry number
                     //
                     entry.dataset.num = index;
+                    
                     //
                     // OPTIONAL: Prevent progress bar to start
                     //
@@ -604,6 +622,7 @@ $.fn.serializeObject = function() {
                 return this;
             }
 
+            $(entry).addClass(Slideshow.state.SHOW);
             $(this).removeClass(Slideshow.state.EMPTY);
             
             //
@@ -723,9 +742,9 @@ $.fn.serializeObject = function() {
     Slideshow.forward      = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FORWARD      + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastForward  = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTFORWARD  + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     
-    $(document).ready(function() {
-        Slideshow.onLoad();
-    });
+    $(document).ready(function() { Slideshow.onLoad(); });
+    $(window).on("focus", function(e){ Slideshow.set("focus", true); });
+    $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
 
     return Slideshow;
 });
