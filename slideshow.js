@@ -624,26 +624,19 @@ $.fn.serializeObject = function() {
 
             $(entry).addClass(Slideshow.state.SHOW);
             $(this).removeClass(Slideshow.state.EMPTY);
-            
-            //
-            // Add active flag and wait for transitions to finish 
-            // (or use slideshowstart if no animation)
-            //
+
             var delay = 0, duration = 0;
 
             var entryStyle = window.getComputedStyle(entry);
             delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             var entryStyle = window.getComputedStyle(entry, ":before");
             delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             var entryStyle = window.getComputedStyle(entry, ":after");
             delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
+            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
 
-            //
-            // Additional transitioning blocks (both .slideshow-entry block or .slideshow-transition blocks)
-            //
             var transition = $(this).find(".slideshow-transition")[0];
             if (transition) {
 
@@ -658,17 +651,17 @@ $.fn.serializeObject = function() {
                 duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
             }
 
-            var fallbackStart = true, fallbackEnd = true;
+            var fallbackStart = false, fallbackEnd = false;
             var fallbackCallback = function() { 
 
                 dispatchEvent(new CustomEvent('slideshow:active', {'slideshow': this, 'entry': entry}));
-                if(!$(this).hasClass(Slideshow.state.ACTIVE) && fallbackStart)
+                if(!$(this).hasClass(Slideshow.state.ACTIVE) && !fallbackStart)
                     $(entry).trigger('animationstart.slideshow');
 
                 if(duration == 0) duration = 1000*parseDuration(Slideshow.get("tick")); // dT
                 setTimeout( function() { 
 
-                   if ($(this).hasClass(Slideshow.state.ACTIVE) && fallbackEnd)
+                   if ($(this).hasClass(Slideshow.state.ACTIVE) && !fallbackEnd)
                         $(entry).trigger('animationend.slideshow');
 
                 }.bind(this), duration);
@@ -678,35 +671,42 @@ $.fn.serializeObject = function() {
             $(entry).off('animationstart.slideshow transitionstart.slideshow');
             $(entry).on ('animationstart.slideshow transitionstart.slideshow', function() { 
                 
-                fallbackStart = false;
-                fallbackCallback();
+                if(!fallbackStart) {
+                
+                    fallbackStart = true;
+                    fallbackCallback();
+                }
 
             }.bind(this));
 
             $(entry).off('animationend.slideshow transitionend.slideshow');
             $(entry).on ('animationend.slideshow transitionend.slideshow', function() {
 
-                fallbackEnd = false;
-                $(this).removeClass(Slideshow.state.ACTIVE); 
-                $(entry).removeClass(Slideshow.state.ACTIVE);    
-
-                //
-                // Update position
-                //
-                Slideshow.updatePosition(this);
-                position = this.dataset.position || 0;
-
-                //
-                // OPTIONAL: Update pagers
-                //
-                $(this).find(".slideshow-pager").each(function() { 
+                if(!fallbackEnd) {
                     
-                    $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
-                    $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
+                    fallbackEnd = true;
 
-                    $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
-                    $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
-                });
+                    $(this).removeClass(Slideshow.state.ACTIVE); 
+                    $(entry).removeClass(Slideshow.state.ACTIVE);    
+
+                    //
+                    // Update position
+                    //
+                    Slideshow.updatePosition(this);
+                    position = this.dataset.position || 0;
+
+                    //
+                    // OPTIONAL: Update pagers
+                    //
+                    $(this).find(".slideshow-pager").each(function() { 
+                        
+                        $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
+                        $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
+
+                        $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
+                        $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
+                    });
+                }
 
             }.bind(this));
 
@@ -724,7 +724,7 @@ $.fn.serializeObject = function() {
     Slideshow.find         = function(selector = Slideshow.get("selector")) { return $(selector).filter(function() { return this.id in Slideshow.dict; }); }
     Slideshow.known        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return this != undefined; }); }
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
-    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.PLAY);  }); }
+    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PAUSE).addClass(Slideshow.state.PLAY);  }); }
 
     Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
@@ -735,7 +735,7 @@ $.fn.serializeObject = function() {
         Slideshow.run();
     }); }
     
-    Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY); }); }
+    Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY).addClass(Slideshow.state.PAUSE); }); }
     Slideshow.rewind       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.REWIND       + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastBackward = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTBACKWARD + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.backward     = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.BACKWARD     + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }

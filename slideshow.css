@@ -22,10 +22,8 @@
 .slideshow.slideshow-theme-default .slideshow-pager      { transition: opacity 500ms; }
 .slideshow.slideshow-theme-default .slideshow-navbar     { transition: opacity 500ms; }
 .slideshow.slideshow-theme-default .slideshow-pager      { opacity:0; }
-.slideshow.slideshow-theme-default .slideshow-transition { opacity:0; }
 .slideshow.slideshow-theme-default .slideshow-navbar     { opacity:0; }
 .slideshow.slideshow-theme-default:not(.empty) .slideshow-pager      { opacity:1; }
-.slideshow.slideshow-theme-default:not(.empty) .slideshow-transition { opacity:1; }
 .slideshow.slideshow-theme-default:not(.empty) .slideshow-navbar     { opacity:1; }
 
 .slideshow-overlay
@@ -359,7 +357,7 @@ body:not(.touch) .slideshow-theme-default .slideshow-forward:active:before {
 
 .slideshow-theme-default .slideshow-transition
 {
-    transition:all 0.40s ease-in-out;
+    transition:all 0.40s ease-in;
     background-color:#FFF;
 
     position:absolute;
