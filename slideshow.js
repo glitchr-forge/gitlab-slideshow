@@ -687,7 +687,7 @@ $.fn.serializeObject = function() {
                     fallbackEnd = true;
 
                     $(this).removeClass(Slideshow.state.ACTIVE); 
-                    $(entry).removeClass(Slideshow.state.ACTIVE);    
+                    $(entry).removeClass(Slideshow.state.ACTIVE);
 
                     //
                     // Update position
