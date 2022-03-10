@@ -107,7 +107,7 @@
 
 .slideshow.play:not(.active) .slideshow-progress:not(.prevent):before 
 {
-    animation: slideshowProgress 5s linear 0s 1 normal both
+    animation: slideshowProgress 5s linear 0s 1 normal both;
     -webkit-animation: slideshowProgress 5s linear 0s 1 normal both;
 }
 
