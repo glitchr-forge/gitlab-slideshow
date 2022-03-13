@@ -147,8 +147,10 @@ $.fn.serializeObject = function() {
         dispatchEvent(new Event('slideshow:ready'));
 
         Slideshow.run(function() {
+
             if (Slideshow.get("autoplay")) {
-                $(Slideshow.get("selector")).each(function() { 
+                
+                $(Slideshow.get("selector")).each(function() {
                     if($(this).hasClass("active") || $(this).hasClass("play")) Slideshow.play(this);
                 });
             }
@@ -167,9 +169,18 @@ $.fn.serializeObject = function() {
                 first:undefined, last:undefined, 
                 progress:0, timeout: undefined, isHover:false};
 
-            var entries = $(this).find("slideshow-entry");
+            var entries = $(this).find(".slideshow-entry");
             if(entries.length < 1) $(this).addClass(Slideshow.state.EMPTY);
             else $(this).addClass(Slideshow.state.REMOVE);
+
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    var attributeValue = $(mutation.target).prop(mutation.attributeName);
+                    console.log("Slideshow "+mutation.target.id+" changed to:", attributeValue);
+                });
+            });
+
+            if(debug > 1) observer.observe(this, { attributes: true, attributeFilter: ['class']});
 
             Slideshow.run(function() {
 
@@ -178,7 +189,7 @@ $.fn.serializeObject = function() {
 
             }.bind(this));
         });
-
+       
         if(debug) {
             
             var slideshows = Slideshow.length(selector);
@@ -286,6 +297,7 @@ $.fn.serializeObject = function() {
         if(!Slideshow.isReady()) return;
 
         Slideshow.update();
+
         callback();
 
         if (Slideshow.instance !== undefined) return;
@@ -334,13 +346,13 @@ $.fn.serializeObject = function() {
                         Slideshow.handleNavigation(that.container);
                         $(that.container).removeClass(Slideshow.state.TIMEOUT)
 
-                        that.interval = setInterval(
-                            function() { 
-                                if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
-                                Slideshow.forward(that.container);
-                                Slideshow.update(that.container); 
-                            }.bind(that), that.timeout || 1000*parseDuration(Slideshow.get("timeout"))
-                        );
+                        that.interval = setInterval(function() { 
+
+                            if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
+                            Slideshow.forward(that.container);
+                            Slideshow.update(that.container); 
+
+                        }.bind(that), that.timeout || 1000*parseDuration(Slideshow.get("timeout")));
 
                     } else if ($(that.container).hasClass(Slideshow.state.TIMEOUT)) {
 
@@ -456,14 +468,16 @@ $.fn.serializeObject = function() {
                 $(this).find(".slideshow-progress").each(function() {
 
                     var style = window.getComputedStyle(this, ":before");
-                    timeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
+                    var progressBarTimeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
                     if(debug > 1)
-                        console.error("Ambiguous timing \""+_timeout+"\" compared to current timing \""+timeout+"\" found in progress bar animation (or transformation): progress bar animation will be used", style);
+                        console.error("Ambiguous timing imposed on \""+timeout+"\" compared to current progress bar animation (or transformation) timing \""+progressBarTimeout+"\": progress bar animation will be used", style);
+
+                    timeout = progressBarTimeout;
                 });
 
                 if(timeout > 0) {
 
-                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"ms\" found in progress bar animation for ", this.id);
+                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"ms\" found set for ", this.id);
                     Slideshow.dict[this.id].timeout = timeout;
                 }
             }
@@ -730,7 +744,7 @@ $.fn.serializeObject = function() {
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
 
     Slideshow.togglePlay   = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { 
-    
+
         $(this).toggleClass(Slideshow.state.PLAY);
         Slideshow.run();
     }); }
@@ -746,5 +760,7 @@ $.fn.serializeObject = function() {
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
 
+	$(document).on("keydown", function(event){ if(event.which == 16 ) Slideshow.pause($(".slideshow")); });
+	$(document).on("keyup", function(event){ if(event.which == 16 ) Slideshow.play($(".slideshow")); });
     return Slideshow;
 });
