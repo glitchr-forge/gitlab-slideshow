@@ -36,6 +36,7 @@ $.fn.serializeObject = function() {
         timeout     : "5000ms", // default timeout
         autoplay    : true,
         max         : -1,
+        transition  : "opacity",
         tick        : "500ms",
         keyControl  : undefined,
         clickControl: undefined,
@@ -46,11 +47,11 @@ $.fn.serializeObject = function() {
     const State = Slideshow.state = {
         PLAY         : "play",
         SHOW         : "show",
-        PREVENT      : "prevent",
+        PREVENT      : "prevent", // Prevent going to this image
         EMPTY        : "empty",
-        ACTIVE       : "active",   // Overhead time until animation ends
+        ACTIVE       : "active",  // Overhead time until animation ends
         TIMEOUT      : "timeout", // Force slideshow time reset (when clicking on backward or forward button)
-
+       
         REWIND       : "rewind",   // Reset to initial slide and keep current state (pause or play)
         FASTBACKWARD : "fast-backward",
         BACKWARD     : "backward",
@@ -69,10 +70,16 @@ $.fn.serializeObject = function() {
     var debug = false;
     var ready = false;
 
-    var parseDuration = function(str) { 
+    Slideshow.parseDuration = function(str) { 
 
-        if(String(str).endsWith("ms")) return parseFloat(String(str))/1000;
-        return parseFloat(String(str));
+        var array = String(str).split(", ");
+            array = array.map(function(t) {
+
+                if(String(t).endsWith("ms")) return parseFloat(String(t))/1000;
+                return parseFloat(String(t));    
+            });
+
+        return Math.max(...array);
     }
 
     Slideshow.get = function(key) {
@@ -146,6 +153,9 @@ $.fn.serializeObject = function() {
         if(debug) console.log("Slideshow is ready.");
         dispatchEvent(new Event('slideshow:ready'));
 
+        if (Slideshow.empty())
+            Slideshow.onLoad();
+
         Slideshow.run(function() {
 
             if (Slideshow.get("autoplay")) {
@@ -159,14 +169,17 @@ $.fn.serializeObject = function() {
         return this;
     };
 
+    Slideshow.empty  = function() { return Object.keys(Slideshow.dict).length === 0; } 
+    Slideshow.clear  = function() { Slideshow.dict = {}; } 
     Slideshow.onLoad = function(selector = Slideshow.get("selector")) {
 
+        Slideshow.clear();
         $(selector).each(function() {
 
             this.id = this.id || Slideshow.uuidv4();
             Slideshow.dict[this.id] = {
-                container: this, instance: undefined, 
-                first:undefined, last:undefined, 
+                container: this, instance: undefined, transitions: undefined, transitions_default: undefined,
+                first:undefined, last:undefined, onHold:false,
                 progress:0, timeout: undefined, isHover:false};
 
             var entries = $(this).find(".slideshow-entry");
@@ -189,7 +202,7 @@ $.fn.serializeObject = function() {
 
             }.bind(this));
         });
-       
+
         if(debug) {
             
             var slideshows = Slideshow.length(selector);
@@ -352,7 +365,7 @@ $.fn.serializeObject = function() {
                             Slideshow.forward(that.container);
                             Slideshow.update(that.container); 
 
-                        }.bind(that), that.timeout || 1000*parseDuration(Slideshow.get("timeout")));
+                        }.bind(that), that.timeout || 1000*Slideshow.parseDuration(Slideshow.get("timeout")));
 
                     } else if ($(that.container).hasClass(Slideshow.state.TIMEOUT)) {
 
@@ -380,7 +393,7 @@ $.fn.serializeObject = function() {
                 Slideshow.instance = undefined;
             }
 
-        }, 1000*parseDuration(Slideshow.get("tick")));
+        }, 1000*Slideshow.parseDuration(Slideshow.get("tick")));
     }
 
     Slideshow.handleNavigation = function(selector = Slideshow.get("selector"))
@@ -426,11 +439,11 @@ $.fn.serializeObject = function() {
             });
 
             $(this).off("mouseenter.slideshow."+this.id);
-            $(this).on ("mouseenter.slideshow."+this.id, function(){ Slideshow.dict[that.id].isHover = true; });
+            $(this).on ("mouseenter.slideshow."+this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = true; });
             $(this).off("mouseover.slideshow." +this.id);
-            $(this).on ("mouseover.slideshow." +this.id, function(){ Slideshow.dict[that.id].isHover = true; });
+            $(this).on ("mouseover.slideshow." +this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = true; });
             $(this).off("mouseleave.slideshow."+this.id);
-            $(this).on ("mouseleave.slideshow."+this.id, function(){ Slideshow.dict[that.id].isHover = false; });
+            $(this).on ("mouseleave.slideshow."+this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = false; });
 
             $(document).off("keydown.slideshow."+this.id);
             $(document).on ("keydown.slideshow."+this.id, function(e){
@@ -462,17 +475,20 @@ $.fn.serializeObject = function() {
             //
             if(Slideshow.dict[this.id].timeout === undefined) {
                 
-                var timeout = 1000*parseDuration($(Slideshow.dict[this.id].container).data("timeout")) || 0;
-                if(!timeout) timeout = 1000*parseDuration(Slideshow.get("timeout")) || 0;
+                var timeout = 1000*Slideshow.parseDuration($(Slideshow.dict[this.id].container).data("timeout")) || 0;
+                if(!timeout) timeout = 1000*Slideshow.parseDuration(Slideshow.get("timeout")) || 0;
 
                 $(this).find(".slideshow-progress").each(function() {
 
                     var style = window.getComputedStyle(this, ":before");
-                    var progressBarTimeout = 1000*Math.max(parseDuration(style["animation-duration"]),parseDuration(style["transition-duration"]));
-                    if(debug > 1)
-                        console.error("Ambiguous timing imposed on \""+timeout+"\" compared to current progress bar animation (or transformation) timing \""+progressBarTimeout+"\": progress bar animation will be used", style);
+                    var progressBarTimeout = 1000*Math.max(Slideshow.parseDuration(style["animation-duration"]),Slideshow.parseDuration(style["transition-duration"]));
+                    if(progressBarTimeout != timeout) {
+                     
+                        if(debug > 1)
+                            console.error("Ambiguous timing imposed  \""+timeout+"ms\" compared to current progress bar animation (or transformation) timing \""+progressBarTimeout+"ms\": progress bar animation will be used", style);
 
-                    timeout = progressBarTimeout;
+                        timeout = progressBarTimeout;
+                    }
                 });
 
                 if(timeout > 0) {
@@ -496,8 +512,8 @@ $.fn.serializeObject = function() {
             var nImages = $(this).find(".slideshow-image").length;
             if (nImages > 1) {
 
-                var tick = 1000*parseDuration(Slideshow.get("tick"));
-                var timeout = Slideshow.dict[this.id].timeout || 1000*parseDuration(Slideshow.get("timeout"));
+                var tick = 1000*Slideshow.parseDuration(Slideshow.get("tick"));
+                var timeout = Slideshow.dict[this.id].timeout || 1000*Slideshow.parseDuration(Slideshow.get("timeout"));
                 var dP = tick/timeout;
 
                 Slideshow.dict[this.id].progress += dP;
@@ -528,8 +544,6 @@ $.fn.serializeObject = function() {
         //
         return $(Slideshow.find(selector)).map(function() { 
 
-            if ($(this).hasClass(Slideshow.state.ACTIVE)) return; 
-
             var entries = $(this).find(".slideshow-entry");
             if (Slideshow.dict[this.id].first === undefined) 
                 Slideshow.dict[this.id].first = this.dataset.first || 0;
@@ -539,7 +553,7 @@ $.fn.serializeObject = function() {
             var position = previousPosition = this.dataset.position;
             var firstPosition = Slideshow.dict[this.id].first;
             var lastPosition  = Slideshow.dict[this.id].last;
-            
+
             if($(this).hasClass(Slideshow.state.REWIND)) 
                 position = firstPosition;
             else if($(this).hasClass(Slideshow.state.FASTBACKWARD)) 
@@ -551,14 +565,15 @@ $.fn.serializeObject = function() {
             else if($(this).hasClass(Slideshow.state.FORWARD)) 
                 position++;
 
-            $(this).removeClass(Slideshow.state.FASTBACKWARD);
-            $(this).removeClass(Slideshow.state.BACKWARD);
-            $(this).removeClass(Slideshow.state.FORWARD);
-            $(this).removeClass(Slideshow.state.FASTFORWARD);
-
             var lastPosition = Slideshow.dict[this.id].last;
             position = Slideshow.modulo(position, lastPosition+1);
-            
+
+            $(this)
+                .removeClass(Slideshow.state.FASTBACKWARD)
+                .removeClass(Slideshow.state.BACKWARD)
+                .removeClass(Slideshow.state.FORWARD)
+                .removeClass(Slideshow.state.FASTFORWARD);
+
             //
             // Update entry 
             //
@@ -577,6 +592,36 @@ $.fn.serializeObject = function() {
             if(position != previousPosition)
                 Slideshow.dict[this.id].progress = 0;
         });
+    }
+
+    Slideshow.callback = function(fn = function() {}, delay = 0)
+    {
+        if(delay == 0) fn();
+        else setTimeout(fn, delay);
+    }
+
+    Slideshow.activeTiming = function(entry = undefined, timing = undefined)
+    {
+        var delay    = timing !== undefined ? timing.delay    : 0, 
+            duration = timing !== undefined ? timing.duration : 0;
+
+        if(entry !== undefined) {
+
+            var entryStyle = window.getComputedStyle(entry);
+
+            delay    = Math.max(delay, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-delay"]),    Slideshow.parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(duration, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-duration"]), Slideshow.parseDuration(entryStyle["transition-duration"])));
+            
+            var entryStyle = window.getComputedStyle(entry, ":before");
+            delay    = Math.max(delay, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-delay"]),    Slideshow.parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(duration, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-duration"]), Slideshow.parseDuration(entryStyle["transition-duration"])));
+            
+            var entryStyle = window.getComputedStyle(entry, ":after");
+            delay    = Math.max(delay, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-delay"]),    Slideshow.parseDuration(entryStyle["transition-delay"])));
+            duration = Math.max(duration, 1000*Math.max(Slideshow.parseDuration(entryStyle["animation-duration"]), Slideshow.parseDuration(entryStyle["transition-duration"])));
+        }
+
+        return {delay:delay, duration:duration};
     }
 
     Slideshow.update = function(selector = Slideshow.get("selector"))
@@ -613,7 +658,88 @@ $.fn.serializeObject = function() {
                     // Entry number
                     //
                     entry.dataset.num = index;
-                    
+
+                    //
+                    // Prepare transitions
+                    // 
+                    if (Slideshow.dict[this.id].transitions === undefined )
+                        Slideshow.dict[this.id].transitions = $(this).find(".slideshow-transition");
+
+                    if (Slideshow.dict[this.id].transitions_default === undefined ) {
+                        Slideshow.dict[this.id].transitions_default = [];
+                        Slideshow.dict[this.id].transitions_default = Slideshow
+                            .quadrant(Slideshow.dict[this.id].transitions)
+                            .toArray()
+                            .map((q, i) => (q !== "") ? q : Slideshow.get("transition"));
+                    }
+
+                    // 
+                    // Prepare class observer..
+                    //
+                    var observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+
+                            if(Slideshow.dict[this.id].onHold) return;
+
+                            // Process transitions
+                            var transitions = Slideshow.dict[this.id].transitions.toArray();
+                            var compass = Slideshow.quadrant(Slideshow.dict[this.id].transitions).toArray();
+                                compass.forEach((q, i) =>  $(Slideshow.dict[this.id].transitions[i]).addClass(q === "" ? Slideshow.dict[this.id].transitions_default[i] : ""));
+
+                            // Mark as active
+                            var classList = $(mutation.target).prop(mutation.attributeName).split(' ');
+                            var isActive = classList.includes(Slideshow.state.ACTIVE);
+                            if(!isActive) return;
+
+                            var active = Slideshow.activeTiming(entry);
+                            transitions.forEach((t) => active = Slideshow.activeTiming(t, active));
+
+                            dispatchEvent(new CustomEvent('slideshow:active', {'slideshow': this, 'entry': entry}));
+                            $(this).addClass(Slideshow.state.ACTIVE);
+
+                            Slideshow.dict[this.id].onHold = true;
+                            Slideshow.callback(function() { 
+
+                                //
+                                // Update position
+                                //
+                                Slideshow.updatePosition(this);
+                                position = this.dataset.position || 0;
+
+                                //
+                                // OPTIONAL: Update pagers
+                                //
+                                $(this).find(".slideshow-pager").each(function() { 
+                                    
+                                    $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
+                                    $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
+
+                                    $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
+                                    $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
+                                });
+
+                                // Remove on hold flag
+                                $(this).removeClass(Slideshow.state.ACTIVE);
+                                
+                                var active = Slideshow.activeTiming(entry);
+                                var transitions = Slideshow.dict[this.id].transitions.toArray();
+                                    transitions.forEach(() => active = Slideshow.activeTiming(this, active));
+
+                                Slideshow.callback(function() {
+                                    
+                                    Slideshow.dict[this.id].onHold = false;
+                                    Slideshow.clearQuadrant(Slideshow.dict[this.id].transitions);
+                                    
+                                }.bind(this), active.delay + active.duration);
+
+                            }.bind(this), active.delay + active.duration);
+
+                        }.bind(this));
+
+                    }.bind(this));
+
+                    observer.observe(this, { attributes: true, attributeFilter: ['class']});
+
                     //
                     // OPTIONAL: Prevent progress bar to start
                     //
@@ -639,126 +765,37 @@ $.fn.serializeObject = function() {
             $(entry).addClass(Slideshow.state.SHOW);
             $(this).removeClass(Slideshow.state.EMPTY);
 
-            var delay = 0, duration = 0;
-
-            var entryStyle = window.getComputedStyle(entry);
-            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-            var entryStyle = window.getComputedStyle(entry, ":before");
-            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-            var entryStyle = window.getComputedStyle(entry, ":after");
-            delay    = Math.max(delay, 1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-            duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-
-            var transition = $(this).find(".slideshow-transition")[0];
-            if (transition) {
-
-                var entryStyle = window.getComputedStyle(transition);
-                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-                var entryStyle = window.getComputedStyle($(this).find(".slideshow-transition")[0], ":before");
-                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-                var entryStyle = window.getComputedStyle($(this).find(".slideshow-transition")[0], ":after");
-                delay    = Math.max(delay,    1000*Math.max(parseDuration(entryStyle["animation-delay"]),    parseDuration(entryStyle["transition-delay"])));
-                duration = Math.max(duration, 1000*Math.max(parseDuration(entryStyle["animation-duration"]), parseDuration(entryStyle["transition-duration"])));
-            }
-
-            var fallbackStart = false, fallbackEnd = false;
-            var fallbackCallback = function() { 
-
-                dispatchEvent(new CustomEvent('slideshow:active', {'slideshow': this, 'entry': entry}));
-                if(!$(this).hasClass(Slideshow.state.ACTIVE) && !fallbackStart)
-                    $(entry).trigger('animationstart.slideshow');
-
-                if(duration == 0) duration = 1000*parseDuration(Slideshow.get("tick")); // dT
-                setTimeout( function() { 
-
-                   if ($(this).hasClass(Slideshow.state.ACTIVE) && !fallbackEnd)
-                        $(entry).trigger('animationend.slideshow');
-
-                }.bind(this), duration);
-            
-            }.bind(this);
-
-            $(entry).off('animationstart.slideshow transitionstart.slideshow');
-            $(entry).on ('animationstart.slideshow transitionstart.slideshow', function() { 
-                
-                if(!fallbackStart) {
-                
-                    fallbackStart = true;
-                    fallbackCallback();
-                }
-
-            }.bind(this));
-
-            $(entry).off('animationend.slideshow transitionend.slideshow');
-            $(entry).on ('animationend.slideshow transitionend.slideshow', function() {
-
-                if(!fallbackEnd) {
-                    
-                    fallbackEnd = true;
-
-                    $(this).removeClass(Slideshow.state.ACTIVE); 
-                    $(entry).removeClass(Slideshow.state.ACTIVE);
-
-                    //
-                    // Update position
-                    //
-                    Slideshow.updatePosition(this);
-                    position = this.dataset.position || 0;
-
-                    //
-                    // OPTIONAL: Update pagers
-                    //
-                    $(this).find(".slideshow-pager").each(function() { 
-                        
-                        $(this).find(".slideshow-page").removeClass(Slideshow.state.ACTIVE);
-                        $(this).find(".slideshow-page").eq(position).addClass(Slideshow.state.ACTIVE);
-
-                        $(this).find(".slideshow-page.active .slideshow-progress").removeClass(Slideshow.state.PREVENT);
-                        $(this).find(".slideshow-page:not(.active) .slideshow-progress").addClass(Slideshow.state.PREVENT);
-                    });
-                }
-
-            }.bind(this));
-
-            $(entry).off('animationcancel.slideshow transitioncancel.slideshow');
-            $(entry).on ('animationcancel.slideshow transitioncancel.slideshow', function() { 
-                $(this).removeClass(Slideshow.state.ACTIVE); 
-                $(entry).removeClass(Slideshow.state.ACTIVE); 
-            }.bind(this));
-
-            setTimeout(fallbackCallback, delay);
             return this;
         });
     }
 
+    Slideshow.quadrant = function(transitions = []) { return transitions.map(function() { return [this.classList].join(" ").replace("slideshow-transition", "").trim(); }); }
+    Slideshow.clearQuadrant = function(transitions = []) { return transitions.map(function() { return $(this).removeClass().addClass("slideshow-transition"); }); }
+
     Slideshow.find         = function(selector = Slideshow.get("selector")) { return $(selector).filter(function() { return this.id in Slideshow.dict; }); }
     Slideshow.known        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return this != undefined; }); }
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
+    
     Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PAUSE).addClass(Slideshow.state.PLAY);  }); }
-
     Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
-
-    Slideshow.togglePlay   = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { 
-
-        $(this).toggleClass(Slideshow.state.PLAY);
-        Slideshow.run();
-    }); }
-    
     Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY).addClass(Slideshow.state.PAUSE); }); }
     Slideshow.rewind       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.REWIND       + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastBackward = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTBACKWARD + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.backward     = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.BACKWARD     + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.forward      = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FORWARD      + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastForward  = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTFORWARD  + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
-    
+    Slideshow.togglePlay   = function(selector = Slideshow.get("selector")) {
+        return $(Slideshow.find(selector)).map(function() { 
+            $(this).toggleClass(Slideshow.state.PLAY);
+            Slideshow.run();
+        }); 
+    }
+
     $(document).ready(function() { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
+    $(window).on("onbeforeunload",  function(e){ Slideshow.clear(); });
 
 	$(document).on("keydown", function(event){ if(event.which == 16 ) Slideshow.pause($(".slideshow")); });
 	$(document).on("keyup", function(event){ if(event.which == 16 ) Slideshow.play($(".slideshow")); });
