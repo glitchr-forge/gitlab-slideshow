@@ -170,7 +170,16 @@ $.fn.serializeObject = function() {
     };
 
     Slideshow.empty  = function() { return Object.keys(Slideshow.dict).length === 0; } 
-    Slideshow.clear  = function() { Slideshow.dict = {}; } 
+    Slideshow.clear  = function() 
+    {
+        $(Slideshow.dict).each(function(id) {
+
+            if (this.observer !== undefined) 
+                this.observer.disconnect();
+        });
+
+        Slideshow.dict = {}; 
+    }
     Slideshow.onLoad = function(selector = Slideshow.get("selector")) {
 
         Slideshow.clear();
@@ -179,7 +188,7 @@ $.fn.serializeObject = function() {
             this.id = this.id || Slideshow.uuidv4();
             Slideshow.dict[this.id] = {
                 container: this, instance: undefined, transitions: undefined, transitions_default: undefined,
-                first:undefined, last:undefined, onHold:false,
+                observer:undefined, first:undefined, last:undefined, onHold:false,
                 progress:0, timeout: undefined, isHover:false};
 
             var entries = $(this).find(".slideshow-entry");
@@ -676,9 +685,10 @@ $.fn.serializeObject = function() {
                     // 
                     // Prepare class observer..
                     //
-                    var observer = new MutationObserver(function(mutations) {
+                    Slideshow.dict[this.id].observer = new MutationObserver(function(mutations) {
                         mutations.forEach(function(mutation) {
 
+                            if(Slideshow.dict[this.id] === undefined) return;
                             if(Slideshow.dict[this.id].onHold) return;
 
                             // Process transitions
@@ -722,8 +732,11 @@ $.fn.serializeObject = function() {
                                 $(this).removeClass(Slideshow.state.ACTIVE);
                                 
                                 var active = Slideshow.activeTiming(entry);
-                                var transitions = Slideshow.dict[this.id].transitions.toArray();
-                                    transitions.forEach(() => active = Slideshow.activeTiming(this, active));
+                                if(Slideshow.dict[this.id] === undefined) return;
+
+                                var transitions = Slideshow.dict[this.id].transitions;
+                                if (transitions !== undefined) transitions = transitions.toArray();
+                                if (transitions !== undefined) transitions.forEach(() => active = Slideshow.activeTiming(this, active));
 
                                 Slideshow.callback(function() {
                                     
@@ -738,7 +751,7 @@ $.fn.serializeObject = function() {
 
                     }.bind(this));
 
-                    observer.observe(this, { attributes: true, attributeFilter: ['class']});
+                    Slideshow.dict[this.id].observer.observe(this, { attributes: true, attributeFilter: ['class']});
 
                     //
                     // OPTIONAL: Prevent progress bar to start

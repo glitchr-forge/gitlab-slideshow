@@ -310,6 +310,25 @@ body:not(.touch) .slideshow-theme-default .slideshow-player > *:active {
     transform: rotate(-45deg);
 	left:5px;
 }
+.slideshow-theme-default .slideshow-backward-90:before {
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+	left:5px;
+}
+
+.slideshow-backward::before,    .slideshow-forward::before,
+.slideshow-backward-90::before, .slideshow-forward-90::before {
+    content: "";
+    display: block;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 15px;
+    height: 15px;
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    position: relative;
+}
 
 .slideshow-theme-default .slideshow-forward:before {
     -webkit-transform: rotate(135deg);
@@ -318,41 +337,65 @@ body:not(.touch) .slideshow-theme-default .slideshow-player > *:active {
 	left:-5px;
 }
 
-@keyframes slideshowBackwardActive {
-    0% {
-        -webkit-transform: translate(-6px) rotate(-45deg);
-        transform: translate(-6px) rotate(-45deg)
-    }
-
-    to {
-        -webkit-transform: translate(0) rotate(-45deg);
-        transform: translate(0) rotate(-45deg)
-    }
+.slideshow-theme-default .slideshow-forward-90:before {
+    -webkit-transform: rotate(225deg);
+    -ms-transform: rotate(225deg);
+    transform: rotate(225deg);
+	left:5px;
 }
 
-@keyframes slideshowForwardActive {
-    0% {
-        -webkit-transform: translate(6px) rotate(135deg);
-        transform: translate(6px) rotate(135deg)
-    }
+@keyframes bounceBottom 
+{
+	0%, 5%, 20%, 30%, 40%, 100% { transform: translateY(0)    rotate(225deg);     }
+	15%                   { transform: translateY(-6px) rotate(225deg); }
+	25%                   { transform: translateY(-3px) rotate(225deg); }
+}
 
-    to {
-        -webkit-transform: translate(0) rotate(135deg);
-        transform: translate(0) rotate(135deg)
-    }
+@keyframes bounceBottomHover
+{
+    0%, 10%, 40%, 60%, 80%, 100% { transform: translateY(0)    rotate(225deg);     }
+    30%                    { transform: translateY(-6px) rotate(225deg); }
+    50%                    { transform: translateY(-3px) rotate(225deg); }
+}
+
+
+body:not(.touch) .slideshow-theme-default .slideshow-forward-90:before
+{
+	-moz-animation: bounceBottom 3s infinite ease-in-out;
+	-webkit-animation: bounceBottom 3s infinite ease-in-out;
+	animation: bounceBottom 3s infinite ease-in-out;
+	animation-delay: 2s;
+}
+
+body:not(.touch) .slideshow-theme-default .slideshow-forward-90:hover:before
+{
+	-moz-animation: bounceBottomHover 1s infinite ;
+	-webkit-animation: bounceBottomHover 1s infinite;
+	animation: bounceBottomHover 1s infinite;
+	animation-delay: 0s;
 }
 
 body:not(.touch) .slideshow-theme-default .slideshow-fast-backward:active:before,
 body:not(.touch) .slideshow-theme-default .slideshow-backward:active:before {
-    -webkit-animation: slideshowBackwardActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
-    animation: slideshowBackwardActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
+    -webkit-animation: slideshowArrowLeftActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
+            animation: slideshowArrowLeftActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
+}
+
+body:not(.touch) .slideshow-theme-default .slideshow-backward-90:active:before {
+    -webkit-animation: slideshowArrowTopActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
+            animation: slideshowArrowTopActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
 
 body:not(.touch) .slideshow-theme-default .slideshow-play:active:before,
 body:not(.touch) .slideshow-theme-default .slideshow-fast-forward:active:before,
 body:not(.touch) .slideshow-theme-default .slideshow-forward:active:before {
-    -webkit-animation: slideshowForwardActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
-    animation: slideshowForwardActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
+    -webkit-animation: slideshowArrowRightActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
+            animation: slideshowArrowRightActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
+}
+
+body:not(.touch) .slideshow-theme-default .slideshow-forward-90:active:before {
+    -webkit-animation: slideshowArrowBottomActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
+            animation: slideshowArrowBottomActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
 
 
