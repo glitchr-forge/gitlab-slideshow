@@ -65,6 +65,8 @@ $.fn.serializeObject = function() {
         UP   : 38,
         RIGHT: 39,
         DOWN : 40,
+
+        SHIFT : 16,
     }
 
     var debug = false;
@@ -189,7 +191,7 @@ $.fn.serializeObject = function() {
             Slideshow.dict[this.id] = {
                 container: this, instance: undefined, transitions: undefined, transitions_default: undefined,
                 observer:undefined, first:undefined, last:undefined, onHold:false,
-                progress:0, timeout: undefined, isHover:false};
+                progress:0, timeout: undefined, isHover:false, isSelected: false};
 
             var entries = $(this).find(".slideshow-entry");
             if(entries.length < 1) $(this).addClass(Slideshow.state.EMPTY);
@@ -405,6 +407,7 @@ $.fn.serializeObject = function() {
         }, 1000*Slideshow.parseDuration(Slideshow.get("tick")));
     }
 
+    Slideshow.lastSelection = undefined;
     Slideshow.handleNavigation = function(selector = Slideshow.get("selector"))
     {
         return $(Slideshow.find(selector)).map(function() { 
@@ -454,21 +457,38 @@ $.fn.serializeObject = function() {
             $(this).off("mouseleave.slideshow."+this.id);
             $(this).on ("mouseleave.slideshow."+this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = false; });
 
+            $(this).on("click.slideshow."+this.id, function(event) {
+                Object.entries(Slideshow.dict).forEach(([k,v]) => { v.isSelected = (k == that.id); });
+            });
+
             $(document).off("keydown.slideshow."+this.id);
-            $(document).on ("keydown.slideshow."+this.id, function(e){
+            $(document).on ("keydown.slideshow."+this.id, function(e) {
+
+                if(!Slideshow.dict[that.id].isSelected && !Slideshow.dict[that.id].isHover) return;
 
                 var isHover = Slideshow.dict[that.id].isHover;
                 var keyControl = that.dataset.keyControl || Slideshow.get("keyControl");
                 if (keyControl === true || (keyControl === undefined && isHover)) {
     
                     if(e.which == Slideshow.key.LEFT) {
-                        Slideshow.backward(that.container);
+                        Slideshow.backward(that);
                         Slideshow.run();
                     } else if(e.which == Slideshow.key.RIGHT) {
-                        Slideshow.forward(that.container);
+                        Slideshow.forward(that);
                         Slideshow.run();
                     }
                 }
+
+                if (keyControl === true && e.which == Slideshow.key.SHIFT)
+                    Slideshow.pause();
+            });
+
+            $(document).off("keyup.slideshow."+this.id);
+            $(document).on ("keyup.slideshow."+this.id, function(e){
+
+                if(!Slideshow.dict[that.id].isSelected && !Slideshow.dict[that.id].isHover) return;
+
+                if(e.which == Slideshow.key.SHIFT) Slideshow.play();
             });
         });
     }
@@ -810,7 +830,5 @@ $.fn.serializeObject = function() {
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
     $(window).on("onbeforeunload",  function(e){ Slideshow.clear(); });
 
-	$(document).on("keydown", function(event){ if(event.which == 16 ) Slideshow.pause($(".slideshow")); });
-	$(document).on("keyup", function(event){ if(event.which == 16 ) Slideshow.play($(".slideshow")); });
     return Slideshow;
 });
