@@ -464,6 +464,7 @@ $.fn.serializeObject = function() {
             $(document).off("keydown.slideshow."+this.id);
             $(document).on ("keydown.slideshow."+this.id, function(e) {
 
+                if(Slideshow.dict[that.id] === undefined) return;
                 if(!Slideshow.dict[that.id].isSelected && !Slideshow.dict[that.id].isHover) return;
 
                 var isHover = Slideshow.dict[that.id].isHover;
@@ -486,6 +487,7 @@ $.fn.serializeObject = function() {
             $(document).off("keyup.slideshow."+this.id);
             $(document).on ("keyup.slideshow."+this.id, function(e){
 
+                if(Slideshow.dict[that.id] === undefined) return;
                 if(!Slideshow.dict[that.id].isSelected && !Slideshow.dict[that.id].isHover) return;
 
                 if(e.which == Slideshow.key.SHIFT) Slideshow.play();
