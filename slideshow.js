@@ -410,7 +410,6 @@ $.fn.serializeObject = function() {
     Slideshow.handleNavigation = function(selector = Slideshow.get("selector"))
     {
         return $(Slideshow.find(selector)).map(function() {
-
             var that = this;
             $(this).find(".slideshow-fast-backward").off("click");
             $(this).find(".slideshow-fast-backward").on ("click", function() {
@@ -812,7 +811,12 @@ $.fn.serializeObject = function() {
     Slideshow.known        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return this != undefined; }); }
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
 
-    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PAUSE).addClass(Slideshow.state.PLAY);  }); }
+    Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) {
+        return $(Slideshow.find(selector)).map(function() { 
+            $(this).removeClass(Slideshow.state.PAUSE).addClass(Slideshow.state.PLAY); 
+            Slideshow.run();
+        }); 
+    }
     Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
     Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
     Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY).addClass(Slideshow.state.PAUSE); }); }
