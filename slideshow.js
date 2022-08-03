@@ -46,6 +46,8 @@ $.fn.serializeObject = function() {
 
     const State = Slideshow.state = {
         PLAY         : "play",
+        PAUSE        : "pause",
+        AUTO         : "auto",
         SHOW         : "show",
         PREVENT      : "prevent", // Prevent going to this image
         EMPTY        : "empty",
@@ -160,12 +162,15 @@ $.fn.serializeObject = function() {
 
         Slideshow.run(function() {
 
-            if (Slideshow.get("autoplay")) {
+            $(Slideshow.get("selector")).each(function() {
 
-                $(Slideshow.get("selector")).each(function() {
-                    if($(this).hasClass("active") || $(this).hasClass("play")) Slideshow.play(this);
-                });
-            }
+                if ($(this).hasClass(Slideshow.state.AUTO) || Slideshow.get("autoplay") || this.data("timeout")) {
+
+                    Slideshow.run(); // Compute pictures
+                    if($(this).hasClass("active") || $(this).hasClass("play"))
+                        Slideshow.play(this);
+                }
+            });
         });
 
         return this;
@@ -182,6 +187,7 @@ $.fn.serializeObject = function() {
 
         Slideshow.dict = {};
     }
+
     Slideshow.onLoad = function(selector = Slideshow.get("selector")) {
 
         Slideshow.clear();
@@ -230,31 +236,54 @@ $.fn.serializeObject = function() {
         entry,
         that = undefined /* slideshow container (default class naming might be different that ."slideshow") */
     ) {
-
         if(!$(entry).hasClass("slideshow-entry")) {
             console.error("Failed to load entry..", entry, " no class \"slideshow-entry\" found");
             return undefined;
         }
 
-        var image = $(entry).find(".slideshow-image")[0] || undefined;
-        if (image !== undefined) return entry;
+        if($(entry).hasClass("ready")) return entry;
+        var entryID  = Array.from(entry.parentNode.children).indexOf(entry);
 
-        image = document.createElement("img");
-        image.setAttribute("class", entry.dataset.imageClass + " slideshow-image");
-        image.setAttribute("alt", entry.dataset.imageAlt);
-        image.setAttribute("style", entry.dataset.imageStyle);
-        image.setAttribute("src", entry.dataset.image);
+        var images  = [];
+        var imageSrcs  = [];
 
-        var href  = entry.dataset.href || undefined;
-        if (href === undefined) entry.prepend(image);
-        else {
+        var _tmp = $(entry).find(".slideshow-image");
+        Object.keys(_tmp).forEach(function(i) {
 
-            var link = document.createElement("a");
-                link.append(image);
-                link.setAttribute("href", href);
-                link.setAttribute("class", "slideshow-link");
+            var image = _tmp[i];
+            var imageSrc = image.src;
 
-            entry.prepend(link);
+            images.push(image);
+            imageSrcs.push(imageSrc);
+        });
+
+        var images = $(entry).find(".slideshow-image").filter(function(k,v) { return imageSrcs.indexOf(this.src) === k && this.src !== undefined; });
+        if(images.length < 2) Slideshow.pause(that);
+
+        var image = $(images)[0] ?? undefined;
+
+        if (image === undefined) {
+
+            image = document.createElement("img");
+
+            if(entry.dataset.imageClass) image.setAttribute("class", entry.dataset.imageClass + " slideshow-image");
+            else image.setAttribute("class", "slideshow-image");
+
+            if(entry.dataset.imageAlt) image.setAttribute("alt", entry.dataset.imageAlt);
+            if(entry.dataset.imageStyle) image.setAttribute("style", entry.dataset.imageStyle);
+            if(entry.dataset.image) image.setAttribute("src", entry.dataset.image);
+
+            var href  = entry.dataset.href || undefined;
+            if (href === undefined) entry.prepend(image);
+            else {
+
+                var link = document.createElement("a");
+                    link.append(image);
+                    link.setAttribute("href", href);
+                    link.setAttribute("class", "slideshow-link");
+
+                entry.prepend(link);
+            }
         }
 
         if(that) {
@@ -267,39 +296,31 @@ $.fn.serializeObject = function() {
                 if (clickControl) {
 
                     Slideshow.forward(that.container);
-                    Slideshow.run(that.container);
+                    Slideshow.run();
                 }
             });
 
             //
-            // OPTIONAL: Compute pagers
-            var pager = $(that).find(".slideshow-pager");
-            var pagerPrototype = pager.map(function() { return new DOMParser().parseFromString(this.dataset.prototype, "text/xml").firstChild; });
+            // OPTIONAL: Computation pagers
+            $(that).find(".slideshow-pager").each(function(i) {
 
-            var thumbnail = entry.dataset.image.replace(/(\.[\w\d_-]+)$/i, '_thumbnail$1');
-            $(pager).each(function(i) {
+                var thumbnail = image.src ?? entry.dataset.image;
+                var pagerPrototype = new DOMParser().parseFromString(this.dataset.prototype, "text/xml").firstChild;
 
-                var prototype = pagerPrototype[i];
-                var ith = $(this).children().length;
+                var prototype = $(this).find(".slideshow-page")[entryID] ?? pagerPrototype[i];
+                $(this).find(".slideshow-page").each(function() {
 
-                $(prototype).find(".slideshow-thumbnail").each(function(i) {
-                    this.setAttribute("src", thumbnail);
-                    $(this).on("click", function() { Slideshow.goto(that, ith); });
-                });
-
-                $(prototype).find(".slideshow-progress").each(function(i) {
-                    $(this).on("click", function() {
-                        if($(this).hasClass(Slideshow.state.PREVENT)) {
-                            Slideshow.goto(that, ith);
-                            Slideshow.run(that.container);
-                        }
+                    $(prototype).find(".slideshow-thumbnail").each(function() {
+                        this.setAttribute("src", thumbnail);
+                        $(this).on("click", () => Slideshow.goto(that, entryID));
                     });
-                });
 
-                $(this).append(prototype);
+                    if(prototype === pagerPrototype[i]) $(this).append(prototype);
+                });
             });
         }
 
+        $(entry).addClass("ready");
         return entry;
     }
 
@@ -361,31 +382,34 @@ $.fn.serializeObject = function() {
 
                 } else if ($(that.container).hasClass(Slideshow.state.PLAY)) {
 
-                    Slideshow.updateProgress(that.container);
+                    if ($(that.container).hasClass(Slideshow.state.AUTO) || Slideshow.get("autoplay") || this.data("timeout")) {
 
-                    if (that.interval === undefined) {
+                        Slideshow.updateProgress(that.container);
 
-                        if(debug > 1) console.log("[SLAVE] ","New call",id);
-                        Slideshow.handleNavigation(that.container);
-                        $(that.container).removeClass(Slideshow.state.TIMEOUT)
+                        if (that.interval === undefined) {
 
-                        that.interval = setInterval(function() {
+                            if(debug > 1) console.log("[SLAVE] ","New call",id);
+                            Slideshow.handleNavigation(that.container);
+                            $(that.container).removeClass(Slideshow.state.TIMEOUT)
 
-                            if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
-                            Slideshow.forward(that.container);
-                            Slideshow.update(that.container);
+                            that.interval = setInterval(function() {
 
-                        }.bind(that), that.timeout || 1000*Slideshow.parseDuration(Slideshow.get("timeout")));
+                                if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
+                                Slideshow.forward(that.container);
+                                Slideshow.update(that.container);
 
-                    } else if ($(that.container).hasClass(Slideshow.state.TIMEOUT)) {
+                            }.bind(that), that.timeout || 1000*Slideshow.parseDuration(Slideshow.get("timeout")));
 
-                        if (that.interval !== undefined) {
+                        } else if ($(that.container).hasClass(Slideshow.state.TIMEOUT)) {
 
-                            if(debug > 1) console.log("[SLAVE] ","Reset",id);
-                            clearInterval(that.interval);
-                            that.interval = undefined;
+                            if (that.interval !== undefined) {
+
+                                if(debug > 1) console.log("[SLAVE] ","Reset",id);
+                                clearInterval(that.interval);
+                                that.interval = undefined;
+                            }
+
                         }
-
                     }
 
                 } else if (that.interval !== undefined) {
@@ -513,9 +537,7 @@ $.fn.serializeObject = function() {
                     var progressBarTimeout = 1000*Math.max(Slideshow.parseDuration(style["animation-duration"]),Slideshow.parseDuration(style["transition-duration"]));
                     if(progressBarTimeout != timeout) {
 
-                        if(debug > 1)
-                            console.error("Ambiguous timing imposed  \""+timeout+"ms\" compared to current progress bar animation (or transformation) timing \""+progressBarTimeout+"ms\": progress bar animation will be used", style);
-
+                        console.error("Mismatch between selector \""+this.dict+"\" timeout \""+timeout+"ms\" and progress bar animation/transform timing \""+progressBarTimeout+"ms\": progressbar timing will be used", style);
                         timeout = progressBarTimeout;
                     }
                 });
@@ -812,14 +834,24 @@ $.fn.serializeObject = function() {
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
 
     Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) {
-        return $(Slideshow.find(selector)).map(function() { 
-            $(this).removeClass(Slideshow.state.PAUSE).addClass(Slideshow.state.PLAY); 
+        return $(Slideshow.find(selector)).map(function() {
+            $(this).addClass(Slideshow.state.PLAY);
             Slideshow.run();
-        }); 
+        });
     }
-    Slideshow.goto         = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { $(this).addClass(Slideshow.state.TIMEOUT + Slideshow.state.ACTIVE); return this.dataset.position = position; }); }
-    Slideshow.active       = function(selector = Slideshow.get("selector"), position)     { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.ACTIVE); }); }
-    Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY).addClass(Slideshow.state.PAUSE); }); }
+
+    Slideshow.goto         = function(selector = Slideshow.get("selector"), position)
+    {
+        return $(Slideshow.find(selector)).map(function() {
+
+            if(this.dataset.position == position) return;
+
+            $(this).addClass(Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE);
+            this.dataset.position = position;
+        });
+    }
+
+    Slideshow.pause        = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).removeClass(Slideshow.state.PLAY); }); }
     Slideshow.rewind       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.REWIND       + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.fastBackward = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.FASTBACKWARD + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
     Slideshow.backward     = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).addClass(Slideshow.state.BACKWARD     + " " + Slideshow.state.TIMEOUT + " " + Slideshow.state.ACTIVE); }); }
@@ -832,7 +864,7 @@ $.fn.serializeObject = function() {
         });
     }
 
-    $(document).ready(function() { Slideshow.onLoad(); });
+    $(window).on("load",  function(e) { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
     $(window).on("onbeforeunload",  function(e){ Slideshow.clear(); });
