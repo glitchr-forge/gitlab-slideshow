@@ -535,7 +535,7 @@ $.fn.serializeObject = function() {
 
                     var style = window.getComputedStyle(this, ":before");
                     var progressBarTimeout = 1000*Math.max(Slideshow.parseDuration(style["animation-duration"]),Slideshow.parseDuration(style["transition-duration"]));
-                    if(progressBarTimeout != timeout) {
+                    if(this.dict != undefined && progressBarTimeout != timeout) {
 
                         console.error("Mismatch between selector \""+this.dict+"\" timeout \""+timeout+"ms\" and progress bar animation/transform timing \""+progressBarTimeout+"ms\": progressbar timing will be used", style);
                         timeout = progressBarTimeout;
@@ -689,6 +689,8 @@ $.fn.serializeObject = function() {
                     var nImages = $(this).find(".slideshow-image").length;
                     $(this).find(".slideshow-progress").css("visibility", nImages > 1 ? "visible" : "hidden");
                     $(this).find(".slideshow-player").css("visibility", nImages > 1 ? "visible" : "hidden");
+
+                    if(nImages < 2) Slideshow.pause(this);
 
                     var alreadyCalled = $(this).find(".slideshow-image").length > 0;
                     if (maxImages > 0 && alreadyCalled && nImages > maxImages) {
