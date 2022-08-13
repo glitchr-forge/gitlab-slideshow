@@ -106,21 +106,21 @@
     transform: scaleX(0)
 }
 
-.slideshow.play:not(.active) .slideshow-progress:not(.prevent):before
+.slideshow.play:not(.hold) .slideshow-progress:not(.prevent):before
 {
     animation: slideshowProgress 5s linear 0s 1 normal both;
     -webkit-animation: slideshowProgress 5s linear 0s 1 normal both;
 }
 
-.slideshow.fast-backward.active .slideshow-progress:not(.prevent):before,
-.slideshow.backward.active .slideshow-progress:not(.prevent):before
+.slideshow.fast-backward.hold .slideshow-progress:not(.prevent):before,
+.slideshow.backward.hold .slideshow-progress:not(.prevent):before
 {
     -webkit-animation: slideshowProgressCancel 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
     animation: slideshowProgressCancel 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
 }
 
-.slideshow.fast-forward.active .slideshow-progress:not(.prevent):before,
-.slideshow.forward.active .slideshow-progress:not(.prevent):before
+.slideshow.fast-forward.hold .slideshow-progress:not(.prevent):before,
+.slideshow.forward.hold .slideshow-progress:not(.prevent):before
 {
     -webkit-animation: slideshowProgressComplete 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both;
     animation: slideshowProgressComplete 1s cubic-bezier(.19, 1, .22, 1) 0s 1 normal both
@@ -174,7 +174,7 @@
     }
 }
 
-@keyframes activeBlink {
+@keyframes holdBlink {
     0% { opacity: .5 }
     25% { opacity: .5 }
     to { opacity: 1 }
@@ -182,11 +182,11 @@
 
 body:not(.touch) .slideshow-theme-default .slideshow-player > *:active,
 body:not(.touch) .slideshow-theme-default .slideshow-player > *:active {
-    -webkit-animation: activeBlink .3s linear 0s 1 normal both;
-    animation: activeBlink .3s linear 0s 1 normal both
+    -webkit-animation: holdBlink .3s linear 0s 1 normal both;
+    animation: holdBlink .3s linear 0s 1 normal both
 }
 
-.slideshow.slideshow-theme-default.active .slideshow-player > * {
+.slideshow.slideshow-theme-default.hold .slideshow-player > * {
     pointer-events: none;
 }
 
@@ -315,7 +315,7 @@ body:not(.touch) .slideshow-theme-default .slideshow-player > *:active {
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
-	left:5px;
+	left:2px;
     top: 5px;
 }
 
@@ -405,25 +405,25 @@ body:not(.touch) .slideshow-theme-default .slideshow-forward-90:hover:before
 	animation-delay: 0s;
 }
 
-body:not(.touch) .slideshow-theme-default .slideshow-fast-backward:active:before,
-body:not(.touch) .slideshow-theme-default .slideshow-backward:active:before {
+body:not(.touch) .slideshow-theme-default .slideshow-fast-backward:hold:before,
+body:not(.touch) .slideshow-theme-default .slideshow-backward:hold:before {
     -webkit-animation: slideshowArrowLeftActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
             animation: slideshowArrowLeftActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
 
-body:not(.touch) .slideshow-theme-default .slideshow-backward-90:active:before {
+body:not(.touch) .slideshow-theme-default .slideshow-backward-90:hold:before {
     -webkit-animation: slideshowArrowTopActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
             animation: slideshowArrowTopActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
 
-body:not(.touch) .slideshow-theme-default .slideshow-play:active:before,
-body:not(.touch) .slideshow-theme-default .slideshow-fast-forward:active:before,
-body:not(.touch) .slideshow-theme-default .slideshow-forward:active:before {
+body:not(.touch) .slideshow-theme-default .slideshow-play:hold:before,
+body:not(.touch) .slideshow-theme-default .slideshow-fast-forward:hold:before,
+body:not(.touch) .slideshow-theme-default .slideshow-forward:hold:before {
     -webkit-animation: slideshowArrowRightActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
             animation: slideshowArrowRightActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
 
-body:not(.touch) .slideshow-theme-default .slideshow-forward-90:active:before {
+body:not(.touch) .slideshow-theme-default .slideshow-forward-90:hold:before {
     -webkit-animation: slideshowArrowBottomActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite;
             animation: slideshowArrowBottomActive 1s cubic-bezier(.19, 1, .22, 1) 0s infinite
 }
@@ -448,49 +448,49 @@ body:not(.touch) .slideshow-theme-default .slideshow-forward-90:active:before {
 }
 
 .slideshow-theme-default              .slideshow-transition.opacity { transition: opacity 0.25s ease; transition-delay:0.5s; }
-.slideshow-theme-default:not(.active) .slideshow-transition.opacity { width:0;    opacity:0; }
-.slideshow-theme-default.active       .slideshow-transition.opacity { width:100%; opacity:1; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.opacity { width:0;    opacity:0; }
+.slideshow-theme-default.hold       .slideshow-transition.opacity { width:100%; opacity:1; }
 
 .slideshow-theme-default              .slideshow-transition.left-left   { transition:width  0.25s ease; left:0; }
-.slideshow-theme-default:not(.active) .slideshow-transition.left-left   { width:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.left-left   { width:100%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.left-left   { width:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.left-left   { width:100%; }
 .slideshow-theme-default              .slideshow-transition.left-middle { transition:width  0.5s ease; }
-.slideshow-theme-default:not(.active) .slideshow-transition.left-middle { left:0; width:0%;  }
-.slideshow-theme-default.active       .slideshow-transition.left-middle { width:50%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.left-middle { left:0; width:0%;  }
+.slideshow-theme-default.hold       .slideshow-transition.left-middle { width:50%; }
 .slideshow-theme-default              .slideshow-transition.left-right { transition: width  0.25s ease, right 0.25s ease 0.25s; }
-.slideshow-theme-default:not(.active) .slideshow-transition.left-right { width:0%; right:100%; }
-.slideshow-theme-default.active       .slideshow-transition.left-right { width:100%; right:0%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.left-right { width:0%; right:100%; }
+.slideshow-theme-default.hold       .slideshow-transition.left-right { width:100%; right:0%; }
 
 .slideshow-theme-default              .slideshow-transition.top-top    { transition:height  0.25s ease; top:0; }
-.slideshow-theme-default:not(.active) .slideshow-transition.top-top    { height:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.top-top    { height:100%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.top-top    { height:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.top-top    { height:100%; }
 .slideshow-theme-default              .slideshow-transition.top-middle { transition:height  0.5s ease; top:0%; }
-.slideshow-theme-default:not(.active) .slideshow-transition.top-middle { height:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.top-middle { height:50%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.top-middle { height:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.top-middle { height:50%; }
 .slideshow-theme-default              .slideshow-transition.top-bottom { transition: height  0.25s ease, bottom 0.25s ease 0.25s; }
-.slideshow-theme-default:not(.active) .slideshow-transition.top-bottom { height:0%; bottom:100%; }
-.slideshow-theme-default.active       .slideshow-transition.top-bottom { height:100%; bottom:0%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.top-bottom { height:0%; bottom:100%; }
+.slideshow-theme-default.hold       .slideshow-transition.top-bottom { height:100%; bottom:0%; }
 
 .slideshow-theme-default              .slideshow-transition.right-right  { transition:width  0.25s ease; right:0; }
-.slideshow-theme-default:not(.active) .slideshow-transition.right-right  { width:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.right-right  { width:100%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.right-right  { width:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.right-right  { width:100%; }
 .slideshow-theme-default              .slideshow-transition.right-middle { transition:width  0.5s ease; right:0%; }
-.slideshow-theme-default:not(.active) .slideshow-transition.right-middle { width:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.right-middle { width:50%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.right-middle { width:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.right-middle { width:50%; }
 .slideshow-theme-default              .slideshow-transition.right-left { transition: width  0.25s ease, left 0.25s ease 0.25s; }
-.slideshow-theme-default:not(.active) .slideshow-transition.right-left { width:0%; left:100%; }
-.slideshow-theme-default.active       .slideshow-transition.right-left { width:100%; left:0%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.right-left { width:0%; left:100%; }
+.slideshow-theme-default.hold       .slideshow-transition.right-left { width:100%; left:0%; }
 
 .slideshow-theme-default              .slideshow-transition.bottom-bottom { transition:height  0.25s ease; bottom:0; }
-.slideshow-theme-default:not(.active) .slideshow-transition.bottom-bottom { height:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.bottom-bottom { height:100%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.bottom-bottom { height:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.bottom-bottom { height:100%; }
 .slideshow-theme-default              .slideshow-transition.bottom-middle { transition:height  0.5s ease; bottom:0; }
-.slideshow-theme-default:not(.active) .slideshow-transition.bottom-middle { height:0%;   }
-.slideshow-theme-default.active       .slideshow-transition.bottom-middle { height:50%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.bottom-middle { height:0%;   }
+.slideshow-theme-default.hold       .slideshow-transition.bottom-middle { height:50%; }
 .slideshow-theme-default              .slideshow-transition.bottom-top { transition: height  0.25s ease, bottom 0.25s ease 0.25s; }
-.slideshow-theme-default:not(.active) .slideshow-transition.bottom-top { height:0%; bottom:100%; }
-.slideshow-theme-default.active       .slideshow-transition.bottom-top { height:100%; bottom:0%; }
+.slideshow-theme-default:not(.hold) .slideshow-transition.bottom-top { height:0%; bottom:100%; }
+.slideshow-theme-default.hold       .slideshow-transition.bottom-top { height:100%; bottom:0%; }
 
 .slideshow-theme-default              .slideshow-transition.middle-middle { transition: transform 0.5s ease; }
-.slideshow-theme-default:not(.active) .slideshow-transition.middle-middle { transform: scale(0); }
-.slideshow-theme-default.active       .slideshow-transition.middle-middle { transform: scale(1.25); }
+.slideshow-theme-default:not(.hold) .slideshow-transition.middle-middle { transform: scale(0); }
+.slideshow-theme-default.hold       .slideshow-transition.middle-middle { transform: scale(1.25); }
