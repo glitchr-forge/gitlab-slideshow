@@ -696,8 +696,8 @@ $.fn.serializeObject = function() {
 
                     var maxImages = Slideshow.get("max");
                     var nEntries = $(this).find(".slideshow-entry").length;
-                    $(this).find(".slideshow-navbar").css("visibility", nEntries > 1 ? "visible" : "hidden");
 
+                    if(nEntries < 2) $(this).find(".slideshow-control").addClass("hidden");
                     if(nEntries < 2) Slideshow.pause(this);
 
                     var alreadyCalled = $(this).find(".slideshow-entry").length > 0;
