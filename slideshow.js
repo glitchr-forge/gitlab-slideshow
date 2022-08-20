@@ -740,6 +740,7 @@ $.fn.serializeObject = function() {
                     // Prepare class observer..
                     //
                     Slideshow.dict[this.id].observer = new MutationObserver(function(mutations) {
+
                         mutations.forEach(function(mutation) {
 
                             if(Slideshow.dict[this.id] === undefined) return;
@@ -752,8 +753,8 @@ $.fn.serializeObject = function() {
 
                             // Mark as hold
                             var classList = $(mutation.target).prop(mutation.attributeName).split(' ');
-                            var isActive = classList.includes(Slideshow.state.HOLD);
-                            if(!isActive) return;
+                            var isHolding = classList.includes(Slideshow.state.HOLD);
+                            if(!isHolding) return;
 
                             var hold = Slideshow.holdTiming(entry);
                             transitions.forEach((t) => hold = Slideshow.holdTiming(t, hold));
@@ -799,6 +800,7 @@ $.fn.serializeObject = function() {
                     }.bind(this));
 
                     Slideshow.dict[this.id].observer.observe(this, { attributes: true, attributeFilter: ['class']});
+                    $(this).toggleClass(Slideshow.state.HOLD).toggleClass(Slideshow.state.HOLD);
 
                     //
                     // OPTIONAL: Prevent progress bar to start
