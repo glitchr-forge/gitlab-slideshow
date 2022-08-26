@@ -176,8 +176,12 @@ $.fn.serializeObject = function() {
     {
         $(Slideshow.dict).each(function(id) {
 
-            if (this.observer !== undefined)
-                this.observer.disconnect();
+            var that = Slideshow.dict[id];
+            if(that == undefined) return;
+
+            clearInterval(that.internal);
+            if (that.observer !== undefined)
+                that.observer.disconnect();
         });
 
         Slideshow.dict = {};
@@ -205,7 +209,7 @@ $.fn.serializeObject = function() {
                 });
             });
 
-            if(debug > 1) observer.observe(this, { attributes: true, attributeFilter: ['class']});
+            if(debug > 0) observer.observe(this, { attributes: true, attributeFilter: ['class']});
 
             Slideshow.run(function() {
 
@@ -365,13 +369,13 @@ $.fn.serializeObject = function() {
                     }
                 }
 
-                if(debug > 1) console.log("[SLAVE] ","State", that.container.classList);
+                if(debug > 2) console.log("[SLAVE] ","State", that.container.classList);
                 if($(that.container).hasClass(Slideshow.state.HOLD) || $(that.container).hasClass(Slideshow.state.TIMEOUT)) {
 
                     $(that.container).removeClass(Slideshow.state.TIMEOUT);
                     if (that.interval !== undefined) {
 
-                        if(debug > 1) console.log("[SLAVE] ","Pause transition",id);
+                        if(debug > 2) console.log("[SLAVE] ","Pause transition",id);
                         clearInterval(that.interval);
                         that.interval = undefined;
                     }
@@ -382,13 +386,13 @@ $.fn.serializeObject = function() {
 
                     if (that.interval === undefined) {
 
-                        if(debug > 1) console.log("[SLAVE] ","New call",id);
+                        if(debug > 2) console.log("[SLAVE] ","New call", id);
                         Slideshow.handleNavigation(that.container);
                         $(that.container).removeClass(Slideshow.state.TIMEOUT)
 
                         that.interval = setInterval(function() {
 
-                            if(debug > 1) console.log("[SLAVE] ","Next iteration",id);
+                            if(debug > 2) console.log("[SLAVE] ","Next iteration", id);
                             Slideshow.forward(that.container);
                             Slideshow.update(that.container);
 
@@ -398,7 +402,7 @@ $.fn.serializeObject = function() {
 
                         if (that.interval !== undefined) {
 
-                            if(debug > 1) console.log("[SLAVE] ","Reset",id);
+                            if(debug > 2) console.log("[SLAVE] ","Reset",id);
                             clearInterval(that.interval);
                             that.interval = undefined;
                         }
@@ -407,7 +411,7 @@ $.fn.serializeObject = function() {
 
                 } else if (that.interval !== undefined) {
 
-                    if(debug > 1) console.log("[SLAVE] ","Fullstop",id);
+                    if(debug > 2) console.log("[SLAVE] ","Fullstop",id);
                     clearInterval(that.interval);
                     that.interval = undefined;
                 }
@@ -415,7 +419,7 @@ $.fn.serializeObject = function() {
 
             if(Slideshow.asleep() && Slideshow.instance != undefined) {
 
-                if(debug > 1) console.log("[MASTER]","Fullstop");
+                if(debug > 0) console.log("[MASTER]","Fullstop");
                 clearInterval(Slideshow.instance);
                 Slideshow.instance = undefined;
             }
@@ -536,7 +540,7 @@ $.fn.serializeObject = function() {
 
                 if(timeout > 0) {
 
-                    if(debug > 1) console.log("[SLAVE] ","New timing \""+timeout+"ms\" found set for ", this.id);
+                    if(debug > 0) console.log("[SLAVE] ","New timing \""+timeout+"ms\" found set for ", this.id);
                     Slideshow.dict[this.id].timeout = timeout;
                 }
             }
@@ -890,7 +894,7 @@ $.fn.serializeObject = function() {
     $(window).on("load",  function(e) { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
-    $(window).on("onbeforeunload",  function(e){ Slideshow.clear(); });
+    $(window).on("onbeforeunload",  function(e) { Slideshow.clear(); });
 
     return Slideshow;
 });
