@@ -428,10 +428,13 @@ $.fn.serializeObject = function() {
     }
 
     Slideshow.lastSelection = undefined;
+    Slideshow.pauseSelection = {};
     Slideshow.handleNavigation = function(selector = Slideshow.get("selector"))
     {
         return $(Slideshow.find(selector)).map(function() {
+
             var that = this;
+
             $(this).find(".slideshow-fast-backward").off("click");
             $(this).find(".slideshow-fast-backward").on ("click", function() {
                 Slideshow.fastBackward(that);
@@ -468,12 +471,17 @@ $.fn.serializeObject = function() {
                 Slideshow.run();
             });
 
+            if(! this.id in Slideshow.pauseSelection) {
+                console.log("oh", this.id);
+                Slideshow.pauseSelection[this.id] = false;
+            }
+
             $(this).off("mouseenter.slideshow."+this.id);
-            $(this).on ("mouseenter.slideshow."+this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = true; });
+            $(this).on ("mouseenter.slideshow."+this.id, function(){ if(that.id in Slideshow.dict && !Slideshow.pauseSelection[that.id]) Slideshow.dict[that.id].isHover = true; });
             $(this).off("mouseover.slideshow." +this.id);
-            $(this).on ("mouseover.slideshow." +this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = true; });
+            $(this).on ("mouseover.slideshow." +this.id, function(){ if(that.id in Slideshow.dict && !Slideshow.pauseSelection[that.id]) Slideshow.dict[that.id].isHover = true; });
             $(this).off("mouseleave.slideshow."+this.id);
-            $(this).on ("mouseleave.slideshow."+this.id, function(){ if(that.id in Slideshow.dict) Slideshow.dict[that.id].isHover = false; });
+            $(this).on ("mouseleave.slideshow."+this.id, function(){ if(that.id in Slideshow.dict && !Slideshow.pauseSelection[that.id]) Slideshow.dict[that.id].isHover = false; });
 
             $(this).on("click.slideshow."+this.id, function(event) {
                 Object.entries(Slideshow.dict).forEach(([k,v]) => { v.isSelected = (k == that.id); });
@@ -498,8 +506,11 @@ $.fn.serializeObject = function() {
                     }
                 }
 
-                if (keyControl === true && e.which == Slideshow.key.SHIFT)
+                if (e.which == Slideshow.key.SHIFT)
                     Slideshow.pause();
+
+                if (e.key == "Shift" && e.altKey)
+                    Slideshow.pauseSelection[that.id] = !Slideshow.pauseSelection[that.id];
             });
 
             $(document).off("keyup.slideshow."+this.id);
@@ -508,6 +519,7 @@ $.fn.serializeObject = function() {
                 if(Slideshow.dict[that.id] === undefined) return;
                 if(!Slideshow.dict[that.id].isSelected && !Slideshow.dict[that.id].isHover) return;
 
+                if(Slideshow.pauseSelection[that.id]) return;
                 if(e.which == Slideshow.key.SHIFT) Slideshow.play();
             });
         });
@@ -861,9 +873,15 @@ $.fn.serializeObject = function() {
     Slideshow.length       = function(selector = Slideshow.get("selector")) { return $(Slideshow.find(selector)).map(function() { return $(this).find(".slideshow-entry").length; }); }
 
     Slideshow.play         = function(selector = Slideshow.get("selector"), options = {}) {
+
         return $(Slideshow.find(selector)).map(function() {
-            $(this).addClass(Slideshow.state.PLAY);
-            Slideshow.run();
+
+            var pause = Slideshow.pauseSelection[this.id] || false;
+            if(!pause) {
+
+                $(this).addClass(Slideshow.state.PLAY);
+                Slideshow.run();
+            }
         });
     }
 
