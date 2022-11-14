@@ -471,10 +471,8 @@ $.fn.serializeObject = function() {
                 Slideshow.run();
             });
 
-            if(! this.id in Slideshow.pauseSelection) {
-                console.log("oh", this.id);
+            if(! this.id in Slideshow.pauseSelection)
                 Slideshow.pauseSelection[this.id] = false;
-            }
 
             $(this).off("mouseenter.slideshow."+this.id);
             $(this).on ("mouseenter.slideshow."+this.id, function(){ if(that.id in Slideshow.dict && !Slideshow.pauseSelection[that.id]) Slideshow.dict[that.id].isHover = true; });
