@@ -250,7 +250,7 @@ $.fn.serializeObject = function() {
         Object.keys(_tmp).forEach(function(i) {
 
             var image = _tmp[i];
-            var imageSrc = image.src;
+            var imageSrc = image.src ?? (image.dataset ? image.dataset.src : undefined);
 
             images.push(image);
             imageSrcs.push(imageSrc);
@@ -270,7 +270,11 @@ $.fn.serializeObject = function() {
 
             if(entry.dataset.imageAlt) image.setAttribute("alt", entry.dataset.imageAlt);
             if(entry.dataset.imageStyle) image.setAttribute("style", entry.dataset.imageStyle);
-            if(entry.dataset.image) image.setAttribute("src", entry.dataset.image);
+            if(entry.dataset.image) {
+
+                if(entry.getAttribute("loading") == "lazy") image.setAttribute("data-src", entry.dataset.image);
+                else image.setAttribute("src", entry.dataset.image);
+            }
 
             var href  = entry.dataset.href || undefined;
             if (href === undefined) entry.prepend(image);
@@ -303,7 +307,7 @@ $.fn.serializeObject = function() {
             // OPTIONAL: Computation pagers
             $(that).find(".slideshow-pager").each(function(i) {
 
-                var thumbnail = image.src ?? entry.dataset.image;
+                var thumbnail = image.src ?? image.dataset.src ?? entry.dataset.image;
                 var pagerPrototype = new DOMParser().parseFromString(this.dataset.prototype, "text/xml").firstChild;
 
                 var prototype = $(this).find(".slideshow-page")[entryID] ?? pagerPrototype[i];
@@ -311,7 +315,7 @@ $.fn.serializeObject = function() {
 
                     $(prototype).find(".slideshow-thumbnail").each(function() {
 
-                        this.setAttribute("src", thumbnail);
+                        if(image.dataset.src == undefined) this.setAttribute("src", thumbnail);
                         $(this).on("click", () => Slideshow.goto(that, entryID));
                     });
 
@@ -907,7 +911,7 @@ $.fn.serializeObject = function() {
         });
     }
 
-    $(window).on("load",  function(e) { Slideshow.onLoad(); });
+    $(window).on("DOMContentLoaded",  function(e) { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
     $(window).on("onbeforeunload",  function(e) { Slideshow.clear(); });
