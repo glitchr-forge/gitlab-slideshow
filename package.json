@@ -1,0 +1,15 @@
+y{
+  "name": "@glitchr/slideshow",
+  "version": "1.0.4",
+  "description": "Slideshow Presenter",
+  "main": "index.js",
+  "repository": {
+    "url": "ssh://git@gitlab.glitchr.dev:public-repository/javascript/slideshow.git",
+    "type": "git"
+  },
+  "author": "Marco Meyer <marco.meyer@glitchr.io>",
+  "license": "LGPL-3.0-or-later",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
