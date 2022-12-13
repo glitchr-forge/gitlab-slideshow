@@ -27,7 +27,7 @@ $.fn.serializeObject = function() {
 
 })(this, function () {
 
-    var Slideshow = {};
+    var Slideshow = window.Slideshow = {};
         Slideshow.version = '0.1.0';
 
     var Dict = Slideshow.dict = {};
