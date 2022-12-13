@@ -147,6 +147,8 @@ $.fn.serializeObject = function() {
 
     Slideshow.ready = function (options = {}) {
 
+        console.log(images);
+
         if("debug" in options)
             debug = options["debug"];
 
@@ -259,7 +261,6 @@ $.fn.serializeObject = function() {
 
         var images = $(entry).find(".slideshow-image").filter(function(k,v) { return imageSrcs.indexOf(this.src) === k && this.src !== undefined; });
         if(images.length < 2) Slideshow.pause(that);
-
         var image = $(images)[0] ?? undefined;
 
         if (image === undefined) {
