@@ -147,8 +147,6 @@ $.fn.serializeObject = function() {
 
     Slideshow.ready = function (options = {}) {
 
-        console.log(images);
-
         if("debug" in options)
             debug = options["debug"];
 
