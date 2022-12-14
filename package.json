@@ -1,6 +1,6 @@
 {
   "name": "@glitchr/slideshow",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Slideshow Presenter",
   "main": "src/index.js",
   "repository": {
