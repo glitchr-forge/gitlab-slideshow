@@ -627,7 +627,18 @@ $.fn.serializeObject = function() {
                 position++;
 
             var lastPosition = Slideshow.dict[this.id].last;
+
             position = Slideshow.modulo(position, lastPosition+1);
+            var entry = entries[position];
+            var image = $(entry).find(".slideshow-image");
+            if (image.length && !image.prop("src")) {
+                image.one("load", function() {
+                    this.classList.add("loaded");
+                    this.classList.remove("loading");
+                });
+                image.prop("src", image.data("src"));
+                image.addClass("loading");
+            }
 
             $(this)
                 .removeClass(Slideshow.state.FASTBACKWARD)
@@ -638,7 +649,25 @@ $.fn.serializeObject = function() {
             //
             // Update entry
             //
-            var entry = entries[position];
+            var prevImage = $(entries[Slideshow.modulo(position-1, lastPosition+1)]).find(".slideshow-image");
+            if (prevImage.length && !prevImage.prop("src")) {
+                prevImage.one("load", function() {
+                    this.classList.add("loaded");
+                    this.classList.remove("loading");
+                });
+                prevImage.prop("src", prevImage.data("src"));
+                prevImage.addClass("loading");
+            }
+
+            var nextImage = $(entries[Slideshow.modulo(position+1, lastPosition+1)]).find(".slideshow-image");
+            if (nextImage.length && !nextImage.prop("src")) {
+                nextImage.one("load", function() {
+                    this.classList.add("loaded");
+                    this.classList.remove("loading");
+                });
+                nextImage.prop("src", nextImage.data("src"));
+                nextImage.addClass("loading");
+            }
 
             var event = new CustomEvent('slideshow:update');
                 event.slideshow = this;
@@ -769,7 +798,7 @@ $.fn.serializeObject = function() {
                             var compass = Slideshow.quadrant(Slideshow.dict[this.id].transitions).toArray();
                                 compass.forEach((q, i) =>  $(Slideshow.dict[this.id].transitions[i]).addClass(q === "" ? Slideshow.dict[this.id].transitions_default[i] : ""));
 
-                            // Mark as hold
+                            // Mark as held
                             var classList = $(mutation.target).prop(mutation.attributeName).split(' ');
                             var isHolding = classList.includes(Slideshow.state.HOLD);
                             if(!isHolding) return;
