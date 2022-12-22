@@ -940,7 +940,7 @@ $.fn.serializeObject = function() {
         });
     }
 
-    $(window).on("DOMContentLoaded",  function(e) { Slideshow.onLoad(); });
+    $(window).on("load",  function(e) { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
     $(window).on("onbeforeunload",  function(e) { Slideshow.clear(); });
