@@ -38,6 +38,7 @@ $.fn.serializeObject = function() {
         max         : -1,
         transition  : "opacity",
         tick        : "500ms",
+        lazyload    : true,
         keyControl  : undefined,
         clickControl: undefined,
         focus       : true,
@@ -272,8 +273,8 @@ $.fn.serializeObject = function() {
             if(entry.dataset.imageStyle) image.setAttribute("style", entry.dataset.imageStyle);
             if(entry.dataset.image) {
 
-                if(entry.getAttribute("loading") == "lazy") image.setAttribute("data-src", entry.dataset.image);
-                else image.setAttribute("src", entry.dataset.image);
+                if(Slideshow.get("lazyload")) entry.getAttribute("loading", "lazy");
+                image.setAttribute("src", entry.dataset.image);
             }
 
             var href  = entry.dataset.href || undefined;
