@@ -27,7 +27,7 @@ $.fn.serializeObject = function() {
 
 })(this, function () {
 
-    var Slideshow = window.Slideshow = {};
+    var Slideshow = {};
         Slideshow.version = '0.1.0';
 
     var Dict = Slideshow.dict = {};
@@ -38,7 +38,6 @@ $.fn.serializeObject = function() {
         max         : -1,
         transition  : "opacity",
         tick        : "500ms",
-        lazyload    : true,
         keyControl  : undefined,
         clickControl: undefined,
         focus       : true,
@@ -260,6 +259,7 @@ $.fn.serializeObject = function() {
 
         var images = $(entry).find(".slideshow-image").filter(function(k,v) { return imageSrcs.indexOf(this.src) === k && this.src !== undefined; });
         if(images.length < 2) Slideshow.pause(that);
+
         var image = $(images)[0] ?? undefined;
 
         if (image === undefined) {
@@ -273,8 +273,8 @@ $.fn.serializeObject = function() {
             if(entry.dataset.imageStyle) image.setAttribute("style", entry.dataset.imageStyle);
             if(entry.dataset.image) {
 
-                if(Slideshow.get("lazyload")) entry.getAttribute("loading", "lazy");
-                image.setAttribute("src", entry.dataset.image);
+                if(entry.getAttribute("loading") == "lazy") image.setAttribute("data-src", entry.dataset.image);
+                else image.setAttribute("src", entry.dataset.image);
             }
 
             var href  = entry.dataset.href || undefined;
@@ -628,18 +628,7 @@ $.fn.serializeObject = function() {
                 position++;
 
             var lastPosition = Slideshow.dict[this.id].last;
-
             position = Slideshow.modulo(position, lastPosition+1);
-            var entry = entries[position];
-            var image = $(entry).find(".slideshow-image");
-            if (image.length && !image.prop("src")) {
-                image.one("load", function() {
-                    this.classList.add("loaded");
-                    this.classList.remove("loading");
-                });
-                image.prop("src", image.data("src"));
-                image.addClass("loading");
-            }
 
             $(this)
                 .removeClass(Slideshow.state.FASTBACKWARD)
@@ -650,25 +639,7 @@ $.fn.serializeObject = function() {
             //
             // Update entry
             //
-            var prevImage = $(entries[Slideshow.modulo(position-1, lastPosition+1)]).find(".slideshow-image");
-            if (prevImage.length && !prevImage.prop("src")) {
-                prevImage.one("load", function() {
-                    this.classList.add("loaded");
-                    this.classList.remove("loading");
-                });
-                prevImage.prop("src", prevImage.data("src"));
-                prevImage.addClass("loading");
-            }
-
-            var nextImage = $(entries[Slideshow.modulo(position+1, lastPosition+1)]).find(".slideshow-image");
-            if (nextImage.length && !nextImage.prop("src")) {
-                nextImage.one("load", function() {
-                    this.classList.add("loaded");
-                    this.classList.remove("loading");
-                });
-                nextImage.prop("src", nextImage.data("src"));
-                nextImage.addClass("loading");
-            }
+            var entry = entries[position];
 
             var event = new CustomEvent('slideshow:update');
                 event.slideshow = this;
@@ -799,7 +770,7 @@ $.fn.serializeObject = function() {
                             var compass = Slideshow.quadrant(Slideshow.dict[this.id].transitions).toArray();
                                 compass.forEach((q, i) =>  $(Slideshow.dict[this.id].transitions[i]).addClass(q === "" ? Slideshow.dict[this.id].transitions_default[i] : ""));
 
-                            // Mark as held
+                            // Mark as hold
                             var classList = $(mutation.target).prop(mutation.attributeName).split(' ');
                             var isHolding = classList.includes(Slideshow.state.HOLD);
                             if(!isHolding) return;
@@ -941,7 +912,7 @@ $.fn.serializeObject = function() {
         });
     }
 
-    $(window).on("load",  function(e) { Slideshow.onLoad(); });
+    $(window).on("DOMContentLoaded",  function(e) { Slideshow.onLoad(); });
     $(window).on("focus", function(e){ Slideshow.set("focus", true); });
     $(window).on("blur",  function(e){ Slideshow.set("focus", false); });
     $(window).on("onbeforeunload",  function(e) { Slideshow.clear(); });
