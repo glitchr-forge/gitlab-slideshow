@@ -228,7 +228,7 @@ $.fn.serializeObject = function() {
             startY = touchobj.pageY
             startTime = new Date().getTime() // record time when finger first makes contact with surface
 
-        }, false)
+        }, {"passive": true, "capture": false});
 
         window.addEventListener('touchend', function (e) {
 
@@ -247,7 +247,7 @@ $.fn.serializeObject = function() {
                     handleSwipe(this, swipeDirection);
             });
 
-        }, false)
+        }, {"passive": true, "capture": false});
     }
 
     Slideshow.onLoad = function(selector = Slideshow.get("selector")) {
