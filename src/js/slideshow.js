@@ -1,4 +1,3 @@
-
 $.fn.serializeObject = function() {
     var o = {};
     var a = this.serializeArray();
@@ -247,7 +246,7 @@ $.fn.serializeObject = function() {
                     handleSwipe(this, swipeDirection);
             });
 
-        }, {"capture": false, "passive": true);
+	}, {"capture": false, "passive": true);
     }
 
     Slideshow.onLoad = function(selector = Slideshow.get("selector")) {
@@ -296,6 +295,68 @@ $.fn.serializeObject = function() {
         }
     }
 
+    Slideshow.lazyLoad = function (lazyloadImages = undefined)
+    {
+        lazyloadImages = lazyloadImages || document.querySelectorAll("img[data-src].slideshow-image:not(.loaded)");
+        if ("IntersectionObserver" in window) {
+
+            var imageObserver = new IntersectionObserver(function (entries, observer) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        var image = entry.target;
+                        var lazybox = image.closest(".lazybox");
+
+                        image.onload = function() {
+                            this.classList.add("loaded");
+                            this.classList.remove("loading");
+                            if(lazybox) lazybox.classList.add("loaded");
+                            if(lazybox) lazybox.classList.remove("loading");
+                        };
+
+                        if(lazybox) lazybox.classList.add("loading");
+                        image.classList.add("loading");
+                        image.src = image.dataset.src;
+
+                        imageObserver.unobserve(image);
+                    }
+                });
+            });
+
+            lazyloadImages.forEach(function (image) {
+                imageObserver.observe(image);
+            });
+
+        } else {
+
+            var lazyloadThrottleTimeout;
+
+            function lazyload() {
+                if (lazyloadThrottleTimeout) {
+                    clearTimeout(lazyloadThrottleTimeout);
+                }
+
+                lazyloadThrottleTimeout = setTimeout(function () {
+                    var scrollTop = window.pageYOffset;
+                    lazyloadImages.forEach(function (img) {
+                        if (img.offsetTop < (window.innerHeight + scrollTop)) {
+                            img.src = img.dataset.src;
+                            img.classList.add('loaded');
+                        }
+                    });
+                    if (lazyloadImages.length == 0) {
+                        document.removeEventListener("scroll", lazyload);
+                        window.removeEventListener("resize", lazyload);
+                        window.removeEventListener("orientationChange", lazyload);
+                    }
+                }, 20);
+            }
+
+            document.addEventListener("scroll", lazyload);
+            window.addEventListener("resize", lazyload);
+            window.addEventListener("orientationChange", lazyload);
+        }
+    }
+
     Slideshow.call = function(
         entry,
         that = undefined /* slideshow container (default class naming might be different that ."slideshow") */
@@ -325,7 +386,6 @@ $.fn.serializeObject = function() {
         if(images.length < 2) Slideshow.pause(that);
 
         var image = $(images)[0] ?? undefined;
-
         if (image === undefined) {
 
             image = document.createElement("img");
@@ -354,6 +414,8 @@ $.fn.serializeObject = function() {
             }
         }
 
+        Slideshow.lazyLoad();
+        
         if(that) {
 
             //
