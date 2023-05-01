@@ -1024,9 +1024,12 @@ $.fn.serializeObject = function() {
 
         return $(Slideshow.find(selector)).map(function() {
 
-            Slideshow.dict[this.id].transitions.each(function() {
-                this.classList = "slideshow-transition right-left";
-            });
+            if(this.id in Slideshow.dict && Slideshow.dict[this.id].transitions !== undefined) {
+
+                Slideshow.dict[this.id].transitions.each(function() {
+                    this.classList = "slideshow-transition right-left";
+                });
+            }
 
             var pause = Slideshow.pauseSelection[this.id] || false;
             if(!pause) {
