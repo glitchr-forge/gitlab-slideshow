@@ -83,7 +83,7 @@
 }
 
 .slideshow ul li:first-child { padding-left:0; }
-.slideshow ul li { padding:0.25em; }
+.slideshow ul li { padding:0 0.25em; }
 
 .slideshow .slideshow-progress {
     width: 100%;
