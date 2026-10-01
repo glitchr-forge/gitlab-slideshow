@@ -4,8 +4,8 @@
   "description": "Slideshow Presenter",
   "main": "src/index.js",
   "repository": {
-    "url": "ssh://git@gitlab.glitchr.dev:public-repository/javascript/slideshow.git",
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/glitchr-studio/slideshow.git"
   },
   "author": "Marco Meyer <marco.meyer@glitchr.io>",
   "license": "LGPL-3.0-or-later",
